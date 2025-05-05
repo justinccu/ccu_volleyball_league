@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>分組抽籤</title>
+</head>
+<body>
+    <h2>分組抽籤</h2>
+
+    <form method="POST" action="{{ url_for('main.draw_teams') }}">
+        <label>選擇隊伍類型：</label>
+        <select name="team_type" required>
+            <option value="男排">男排</option>
+            <option value="女排">女排</option>
+        </select>
+        <button type="submit">開始分組</button>
+    </form>
+
+    <hr>
+
+    {% if team_type %}
+        <h3>{{ team_type }} 分組結果</h3>
+        <div style="display: flex; gap: 50px;">
+            <div>
+                <h4>A 組</h4>
+                <ul>
+                    {% for team in group_a %}
+                        <li>{{ team.name }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div>
+                <h4>B 組</h4>
+                <ul>
+                    {% for team in group_b %}
+                        <li>{{ team.name }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    {% endif %}
+
+    <br><a href="{{ url_for('main.dashboard') }}">返回管理員主頁</a>
+</body>
+</html>

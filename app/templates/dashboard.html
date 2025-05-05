@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>主頁</title>
+</head>
+<body>
+    <h2>歡迎, {{ current_user.name }}!</h2>
+    <p>這裡將顯示你的比賽與帳號管理功能</p>
+
+    {% if current_user.role == 'admin' %}
+        <h3>⚙️ 管理員操作面板</h3>
+        <ul>
+            <li><a href="/admin/users">👥 使用者管理</a></li>
+            <li><a href="/admin/draw_teams">🎲 分組抽籤</a></li>
+        </ul>
+    {% endif %}
+
+    {% if current_user.role in ['captain', 'member'] %}
+        <h3>我的比賽（開發中）</h3>
+        <p>你是 {{ current_user.role }}，將來這裡會顯示你隊伍的賽程與比數。</p>
+    {% endif %}
+
+    <br><br>
+    <a href="/logout">登出</a>
+</body>
+</html>

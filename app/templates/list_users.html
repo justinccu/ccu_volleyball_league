@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>使用者清單</title>
+    <script>
+        function toggleTeamInputs() {
+            var role = document.getElementById("role").value;
+            document.getElementById("new_team_section").style.display = role === "captain" ? "block" : "none";
+            document.getElementById("select_team_section").style.display = role === "member" ? "block" : "none";
+        }
+        window.onload = toggleTeamInputs;
+    </script>
+</head>
+
+<body>
+    <h2>新增使用者</h2>
+
+    <form method="POST">
+        <label>姓名：</label>
+        <input type="text" name="name" required>
+
+        <label>帳號：</label>
+        <input type="text" name="username" required>
+
+        <label>密碼：</label>
+        <input type="password" name="password" required>
+
+        <label>角色：</label>
+        <select name="role" id="role" onchange="toggleTeamInputs()" required>
+            <option value="captain">captain</option>
+            <option value="member">member</option>
+            <option value="visitor">visitor</option>
+            <option value="admin">admin</option>
+        </select>
+
+        <br>
+        <label>系級：</label>
+        <select name="department" required>
+            {% for dep in departments %}
+            <option value="{{ dep }}">{{ dep }}</option>
+            {% endfor %}
+        </select>
+
+        <label>年級：</label>
+        <select name="grade" required>
+            {% for i in range(1, 7) %}
+            <option value="{{ i }}">{{ i }} 年級</option>
+            {% endfor %}
+        </select>
+
+        <label>性別：</label>
+        <select name="gender" required>
+            <option value="男">男</option>
+            <option value="女">女</option>
+        </select>
+
+        <!-- 隊長輸入隊名 -->
+        <!-- 隊長輸入隊名與性別 -->
+        <div id="new_team_section" style="margin-top: 5px;">
+            <label>新隊伍名稱：</label>
+            <input type="text" name="new_team_name">
+
+            <label>隊伍類別：</label>
+            <select name="team_type">
+                <option value="男排">男排</option>
+                <option value="女排">女排</option>
+            </select>
+        </div>
+
+        <!-- 隊員選擇隊伍 -->
+        <div id="select_team_section" style="margin-top: 5px; display:none;">
+            <label>選擇加入隊伍：</label>
+            <select name="team_id">
+                {% for team in teams %}
+                <option value="{{ team.id }}">{{ team.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <br>
+        <button type="submit">建立使用者</button>
+    </form>
+
+    <hr>
+    <h2>分發使用者</h2>
+
+    <form method="POST" action="{{ url_for('main.assign_user') }}">
+        <label>選擇使用者：</label>
+        <select name="user_id" required>
+            {% for u in users %}
+            {% if u.role != 'admin' and u.role != 'captain' %}
+            <option value="{{ u.id }}">{{ u.name }}--{{u.username}}({{ u.team.name if u.team else '無隊伍' }})</option>
+            {% endif %}
+            {% endfor %}
+        </select>
+
+        <label>分配至隊伍：</label>
+        <select name="team_id">
+            {% for team in teams %}
+            <option value="{{ team.id }}">{{ team.name }}</option>
+            {% endfor %}
+            <option value="">無</option>
+        </select>
+
+        <button type="submit">分配</button>
+    </form>
+
+    <hr>
+    <h2>刪除隊伍</h2>
+
+    <form method="POST" action="{{ url_for('main.delete_team', team_id=0) }}" onsubmit="return confirmDeleteTeam()">
+        <label>選擇要刪除的隊伍：</label>
+        <select name="team_id" id="team-select" required>
+            <option value="">-- 請選擇 --</option>
+            {% for team in teams %}
+            <option value="{{ team.id }}">{{ team.name }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit">刪除整隊</button>
+    </form>
+
+    <script>
+        function confirmDeleteTeam() {
+            const select = document.getElementById("team-select");
+            if (select.value === "") {
+                alert("請先選擇隊伍");
+                return false;
+            }
+            return confirm("確定要刪除此隊伍嗎？此操作會解除所有成員與隊伍的關聯！");
+        }
+
+        // 把 action 的 URL 動態補上隊伍 ID
+        document.getElementById("team-select").addEventListener("change", function () {
+            const form = this.closest("form");
+            const selectedId = this.value;
+            form.action = "/admin/delete_team/" + selectedId;
+        });
+    </script>
+    <hr>
+
+    <h2>使用者清單</h2>
+    <table border="1">
+        <tr>
+            <th>ID</th>
+            <th>姓名</th>
+            <th>帳號</th>
+            <th>角色</th>
+            <th>所屬隊伍</th>
+            <th>系級</th>
+            <th>年級</th>
+            <th>性別</th>
+            <th>操作</th>
+        </tr>
+        {% for u in users %}
+        <tr>
+            <td>{{ u.id }}</td>
+            <td>{{ u.name }}</td>
+            <td>{{ u.username }}</td>
+            <td>{{ u.role }}</td>
+            <td>
+                {% if u.team %}
+                {{ u.team.name }}({{ u.team.team_type }})
+                {% else %}
+                無
+                {% endif %}
+            </td>
+            <td>{{ u.department or '—' }}</td>
+            <td>{{ u.grade or '—' }}</td>
+            <td>{{ u.gender or '—' }}</td>
+            <td>
+                {% if u.role == 'admin' %}
+                管理員
+                {% elif u.role == 'captain' %}
+                隊長
+                {% else %}
+                <form method="POST" action="{{ url_for('main.delete_user', user_id=u.id) }}" style="display:inline;">
+                    <button type="submit" onclick="return confirm('確定要刪除 {{ u.username }} 嗎？')">🗑 刪除</button>
+                </form>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <br>
+    <hr><br>
+
+    <h2>各隊伍成員一覽</h2>
+    {% for team in teams %}
+    <h3>
+        {{ team.name }} ({{ team.team_type }})
+        {% if team.team_cycle %}
+        - {{ team.team_cycle }}
+        {% endif %}
+    </h3>
+    <ul>
+        {% if team.captain %}
+        <li><strong>隊長</strong>: {{ team.captain.name }} ({{ team.captain.username }})</li>
+        {% endif %}
+        {% for member in team.members %}
+        {% if member.id != team.captain_id %}
+        <li><strong>隊員</strong>: {{ member.name }} ({{ member.username }})</li>
+        {% endif %}
+        {% endfor %}
+    </ul>
+    {% endfor %}
+
+
+    <br><a href="/dashboard">回主頁</a>
+</body>
+
+</html>
