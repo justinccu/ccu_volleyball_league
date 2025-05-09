@@ -85,7 +85,7 @@
     <hr>
     <h2>分發使用者</h2>
 
-    <form method="POST" action="{{ url_for('main.assign_user') }}">
+    <form method="POST" action="{{ url_for('route_ManageUser.assign_user') }}">
         <label>選擇使用者：</label>
         <select name="user_id" required>
             {% for u in users %}
@@ -109,7 +109,7 @@
     <hr>
     <h2>刪除隊伍</h2>
 
-    <form method="POST" action="{{ url_for('main.delete_team', team_id=0) }}" onsubmit="return confirmDeleteTeam()">
+    <form method="POST" action="{{ url_for('route_ManageUser.delete_team', team_id=0) }}" onsubmit="return confirmDeleteTeam()">
         <label>選擇要刪除的隊伍：</label>
         <select name="team_id" id="team-select" required>
             <option value="">-- 請選擇 --</option>
@@ -174,7 +174,7 @@
                 {% elif u.role == 'captain' %}
                 隊長
                 {% else %}
-                <form method="POST" action="{{ url_for('main.delete_user', user_id=u.id) }}" style="display:inline;">
+                <form method="POST" action="{{ url_for('route_ManageUser.delete_user', user_id=u.id) }}" style="display:inline;">
                     <button type="submit" onclick="return confirm('確定要刪除 {{ u.username }} 嗎？')">🗑 刪除</button>
                 </form>
                 {% endif %}
