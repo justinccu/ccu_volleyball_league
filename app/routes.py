@@ -65,6 +65,7 @@ def draw_teams():
 
         # 取得所有該類別隊伍，按名稱排序
         teams = Team.query.filter_by(team_type=team_type).order_by(Team.name).all()
+        random.shuffle(teams)
 
         # 分 A / B 組
         for i, team in enumerate(teams):

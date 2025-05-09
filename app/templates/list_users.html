@@ -109,16 +109,63 @@
     <hr>
     <h2>刪除隊伍</h2>
 
-    <form method="POST" action="{{ url_for('route_ManageUser.delete_team', team_id=0) }}" onsubmit="return confirmDeleteTeam()">
+    <form method="POST" action="{{ url_for('route_ManageUser.delete_team', team_id=0) }}"
+        onsubmit="return confirmDeleteTeam()">
+        <label>隊伍類型：</label>
+        <select id="team-type" onchange="filterTeams()" required>
+            <option value="男排" selected>男排</option>
+            <option value="女排">女排</option>
+        </select>
+
         <label>選擇要刪除的隊伍：</label>
         <select name="team_id" id="team-select" required>
-            <option value="">-- 請選擇 --</option>
+            <option value="">-- 請選擇隊伍 --</option>
             {% for team in teams %}
-            <option value="{{ team.id }}">{{ team.name }}</option>
+            <option value="{{ team.id }}" data-type="{{ team.team_type }}">{{ team.name }}</option>
             {% endfor %}
         </select>
+
         <button type="submit">刪除整隊</button>
     </form>
+
+    <script>
+        function filterTeams() {
+            const selectedType = document.getElementById('team-type').value;
+            const teamSelect = document.getElementById('team-select');
+            let firstVisibleOptionSet = false;
+
+            for (const option of teamSelect.options) {
+                if (option.value === "") {
+                    option.hidden = false;
+                    option.disabled = false;
+                    continue;
+                }
+                const isVisible = option.getAttribute('data-type') === selectedType;
+                option.hidden = !isVisible;
+                option.disabled = !isVisible;
+
+                if (isVisible && !firstVisibleOptionSet) {
+                    teamSelect.value = option.value;
+                    firstVisibleOptionSet = true;
+                }
+            }
+
+            if (!firstVisibleOptionSet) {
+                teamSelect.value = ""; // 若無隊伍則清空選擇
+            }
+        }
+
+        function confirmDeleteTeam() {
+            const teamSelect = document.getElementById('team-select');
+            const selectedText = teamSelect.options[teamSelect.selectedIndex]?.text || '';
+            return confirm(`確定要刪除隊伍 "${selectedText}" 嗎？`);
+        }
+
+        // 初始執行
+        document.addEventListener('DOMContentLoaded', () => {
+            filterTeams(); // 預設顯示男排隊伍並自動選擇第一個
+        });
+    </script>
 
     <script>
         function confirmDeleteTeam() {
@@ -174,7 +221,8 @@
                 {% elif u.role == 'captain' %}
                 隊長
                 {% else %}
-                <form method="POST" action="{{ url_for('route_ManageUser.delete_user', user_id=u.id) }}" style="display:inline;">
+                <form method="POST" action="{{ url_for('route_ManageUser.delete_user', user_id=u.id) }}"
+                    style="display:inline;">
                     <button type="submit" onclick="return confirm('確定要刪除 {{ u.username }} 嗎？')">🗑 刪除</button>
                 </form>
                 {% endif %}
