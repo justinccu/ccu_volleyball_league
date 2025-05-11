@@ -63,6 +63,16 @@ def draw_teams():
             flash("❌ 請選擇分組類別")
             return redirect(url_for('main.draw_teams'))
 
+        # 清除所有比賽記錄
+        try:
+            Match.query.delete()
+            db.session.commit()
+            flash("已清除所有比賽記錄")
+        except Exception as e:
+            db.session.rollback()
+            flash(f"清除比賽記錄時發生錯誤：{str(e)}")
+            return redirect(url_for('main.draw_teams'))
+
         # 取得所有該類別隊伍，按名稱排序
         teams = Team.query.filter_by(team_type=team_type).order_by(Team.name).all()
         random.shuffle(teams)
@@ -79,6 +89,99 @@ def draw_teams():
         return render_template('draw_teams.html', team_type=team_type, group_a=group_a, group_b=group_b)
 
     return render_template('draw_teams.html')
+
+@main.route('/admin/generate_schedule', methods=['POST'])
+@login_required
+def generate_schedule():
+    if current_user.role != 'admin':
+        return "❌ 無權限操作", 403
+
+    team_type = request.form.get('team_type')
+    group_a = request.form.getlist('group_a')
+    group_b = request.form.getlist('group_b')
+
+    if not team_type or not group_a or not group_b:
+        flash("❌ 缺少必要資訊")
+        return redirect(url_for('main.draw_teams'))
+
+    # 計算每個隊伍擔任裁判的次數
+    def get_referee_counts(teams):
+        referee_counts = {}
+        for team in teams:
+            count = Match.query.filter_by(referee_id=team.id).count()
+            referee_counts[team.id] = count
+        return referee_counts
+
+    # 為每個分組生成循環賽賽程
+    def generate_group_schedule(teams, other_group_teams):
+        schedule = []
+        # 獲取另一組隊伍的裁判次數
+        referee_counts = get_referee_counts(other_group_teams)
+        
+        for team1, team2 in combinations(teams, 2):
+            # 找出另一組中擔任裁判次數最少的隊伍
+            min_count = min(referee_counts.values())
+            available_referees = [team for team in other_group_teams 
+                                if referee_counts[team.id] == min_count]
+            referee = random.choice(available_referees)
+            
+            # 更新裁判次數
+            referee_counts[referee.id] += 1
+            
+            # 獲取隊伍 ID
+            team1_obj = Team.query.filter_by(name=team1, team_type=team_type).first()
+            team2_obj = Team.query.filter_by(name=team2, team_type=team_type).first()
+            referee_obj = referee
+
+            # 檢查是否已存在相同的比賽
+            existing_match = Match.query.filter(
+                ((Match.team1_id == team1_obj.id) & (Match.team2_id == team2_obj.id)) |
+                ((Match.team1_id == team2_obj.id) & (Match.team2_id == team1_obj.id))
+            ).first()
+
+            if not existing_match:
+                # 建立比賽
+                match = Match(
+                    team1_id=team1_obj.id,
+                    team2_id=team2_obj.id,
+                    referee_id=referee_obj.id,
+                )
+                schedule.append(match)
+
+        return schedule
+
+    try:
+        # 獲取隊伍對象
+        group_a_teams = [Team.query.filter_by(name=name, team_type=team_type).first() for name in group_a]
+        group_b_teams = [Team.query.filter_by(name=name, team_type=team_type).first() for name in group_b]
+
+        # 生成 A 組和 B 組的賽程
+        schedule_a = generate_group_schedule(group_a, group_b_teams)
+        schedule_b = generate_group_schedule(group_b, group_a_teams)
+
+        # 將所有比賽保存到資料庫
+        for match in schedule_a + schedule_b:
+            db.session.add(match)
+        db.session.commit()
+
+        # 重新查詢分組資訊以顯示在頁面上
+        group_a_teams = Team.query.filter_by(team_type=team_type, team_cycle='A').order_by(Team.name).all()
+        group_b_teams = Team.query.filter_by(team_type=team_type, team_cycle='B').order_by(Team.name).all()
+
+        # 查詢所有新生成的比賽
+        matches = Match.query.filter(
+            Match.team1.has(team_type=team_type)
+        ).order_by(Match.team1_id, Match.team2_id).all()
+
+        flash("✅ 賽程已成功生成")
+        return render_template('draw_teams.html', 
+                             team_type=team_type, 
+                             group_a=group_a_teams, 
+                             group_b=group_b_teams,
+                             matches=matches)
+    except Exception as e:
+        db.session.rollback()
+        flash(f"❌ 生成賽程時發生錯誤：{str(e)}")
 
 # 還在處理當中
 @main.route('/admin/create_competition', methods=['GET', 'POST'])

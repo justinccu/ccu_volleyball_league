@@ -39,6 +39,71 @@
         </div>
     {% endif %}
 
+    {% if team_type %}
+        <form method="POST" action="{{ url_for('main.generate_schedule') }}" style="margin-top: 20px;">
+            <input type="hidden" name="team_type" value="{{ team_type }}">
+            {% for team in group_a %}
+                <input type="hidden" name="group_a" value="{{ team.name }}">
+            {% endfor %}
+            {% for team in group_b %}
+                <input type="hidden" name="group_b" value="{{ team.name }}">
+            {% endfor %}
+            <button type="submit">生成賽程</button>
+        </form>
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div style="margin-top: 20px;">
+                    {% for message in messages %}
+                        <p>{{ message }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% if matches %}
+            <div style="margin-top: 30px;">
+                <h3>已生成的賽程</h3>
+                <div style="display: flex; gap: 50px;">
+                    <div>
+                        <h4>A 組賽程</h4>
+                        <table border="1" style="border-collapse: collapse; width: 100%;">
+                            <tr>
+                                <th style="padding: 8px;">隊伍 1</th>
+                                <th style="padding: 8px;">隊伍 2</th>
+                                <th style="padding: 8px;">裁判</th>
+                            </tr>
+                            {% for match in matches if match.team1.team_cycle == 'A' %}
+                                <tr>
+                                    <td style="padding: 8px;">{{ match.team1.name }}</td>
+                                    <td style="padding: 8px;">{{ match.team2.name }}</td>
+                                    <td style="padding: 8px;">{{ match.referee.name }}</td>
+                                </tr>
+                            {% endfor %}
+                        </table>
+                    </div>
+                    <div>
+                        <h4>B 組賽程</h4>
+                        <table border="1" style="border-collapse: collapse; width: 100%;">
+                            <tr>
+                                <th style="padding: 8px;">隊伍 1</th>
+                                <th style="padding: 8px;">隊伍 2</th>
+                                <th style="padding: 8px;">裁判</th>
+                            </tr>
+                            {% for match in matches if match.team1.team_cycle == 'B' %}
+                                <tr>
+                                    <td style="padding: 8px;">{{ match.team1.name }}</td>
+                                    <td style="padding: 8px;">{{ match.team2.name }}</td>
+                                    <td style="padding: 8px;">{{ match.referee.name }}</td>
+                                </tr>
+                            {% endfor %}
+                        </table>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    {% endif %}
+
     <br><a href="{{ url_for('main.dashboard') }}">返回管理員主頁</a>
 </body>
 </html>
