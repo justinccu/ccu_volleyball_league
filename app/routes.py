@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_user, logout_user, login_required, current_user
-from .models import User, Team, Competition
+from .models import User, Team, Match
 from . import db, bcrypt
 from itertools import combinations
 import random
