@@ -4,7 +4,7 @@ from .models import User, Team, Match
 from . import db, bcrypt
 from itertools import combinations
 import random
-from datetime import datetime
+from datetime import datetime, timedelta
 from . import route_ManageUser
 
 main = Blueprint('main', __name__)
@@ -46,7 +46,21 @@ def register():
 @login_required
 def show_draw_teams_page():
     if current_user.role != 'admin':
-        return "❌ 無權限操作", 403
+        flash("❌ 無權限操作")
+        return redirect(url_for('main.dashboard'))
+    
+    # 從 URL 參數獲取 team_type
+    team_type = request.args.get('team_type')
+    
+    # 如果有 team_type，重新查詢分組資訊
+    if team_type:
+        group_a_teams = Team.query.filter_by(team_type=team_type, team_cycle='A').order_by(Team.name).all()
+        group_b_teams = Team.query.filter_by(team_type=team_type, team_cycle='B').order_by(Team.name).all()
+        return render_template('draw_teams.html', 
+                             team_type=team_type,
+                             group_a=group_a_teams,
+                             group_b=group_b_teams)
+    
     return render_template('draw_teams.html')
 
 
@@ -94,70 +108,131 @@ def draw_teams():
 @login_required
 def generate_schedule():
     if current_user.role != 'admin':
-        return "❌ 無權限操作", 403
+        flash("❌ 無權限操作")
+        return redirect(url_for('main.draw_teams', team_type=request.form.get('team_type')))
 
     team_type = request.form.get('team_type')
     group_a = request.form.getlist('group_a')
     group_b = request.form.getlist('group_b')
+    start_date_str = request.form.get('start_date')
+    end_date_str = request.form.get('end_date')
 
     if not team_type or not group_a or not group_b:
-        flash("❌ 缺少必要資訊")
-        return redirect(url_for('main.draw_teams'))
+        flash("❌ 缺少必要資訊：請確保已選擇隊伍類型並完成分組")
+        return redirect(url_for('main.draw_teams', team_type=team_type))
 
-    # 計算每個隊伍擔任裁判的次數
-    def get_referee_counts(teams):
-        referee_counts = {}
-        for team in teams:
-            count = Match.query.filter_by(referee_id=team.id).count()
-            referee_counts[team.id] = count
-        return referee_counts
-
-    # 為每個分組生成循環賽賽程
-    def generate_group_schedule(teams, other_group_teams):
-        schedule = []
-        # 獲取另一組隊伍的裁判次數
-        referee_counts = get_referee_counts(other_group_teams)
-        
-        for team1, team2 in combinations(teams, 2):
-            # 找出另一組中擔任裁判次數最少的隊伍
-            min_count = min(referee_counts.values())
-            available_referees = [team for team in other_group_teams 
-                                if referee_counts[team.id] == min_count]
-            referee = random.choice(available_referees)
-            
-            # 更新裁判次數
-            referee_counts[referee.id] += 1
-            
-            # 獲取隊伍 ID
-            team1_obj = Team.query.filter_by(name=team1, team_type=team_type).first()
-            team2_obj = Team.query.filter_by(name=team2, team_type=team_type).first()
-            referee_obj = referee
-
-            # 檢查是否已存在相同的比賽
-            existing_match = Match.query.filter(
-                ((Match.team1_id == team1_obj.id) & (Match.team2_id == team2_obj.id)) |
-                ((Match.team1_id == team2_obj.id) & (Match.team2_id == team1_obj.id))
-            ).first()
-
-            if not existing_match:
-                # 建立比賽
-                match = Match(
-                    team1_id=team1_obj.id,
-                    team2_id=team2_obj.id,
-                    referee_id=referee_obj.id,
-                )
-                schedule.append(match)
-
-        return schedule
+    if not start_date_str or not end_date_str:
+        flash("❌ 請選擇比賽開始和結束日期")
+        return redirect(url_for('main.draw_teams', team_type=team_type))
 
     try:
+        Match.query.delete()
+        db.session.commit()
+        # 驗證日期格式
+        start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
+        end_date = datetime.strptime(end_date_str, "%Y-%m-%d")
+        
+        if start_date > end_date:
+            flash("❌ 開始日期不能晚於結束日期")
+            return redirect(url_for('main.draw_teams', team_type=team_type))
+
+        # 計算每個隊伍擔任裁判的次數
+        def get_referee_counts(teams):
+            referee_counts = {}
+            for team in teams:
+                count = Match.query.filter_by(referee_id=team.id).count()
+                referee_counts[team.id] = count
+            return referee_counts
+
+        # 生成可用的比賽時間
+        def generate_available_times():
+            available_times = []
+            current_date = start_date
+            while current_date <= end_date:
+                if current_date.weekday() in {0, 1, 3, 4}:  # 週一、二、四、五
+                    for hour in range(19, 24):
+                        match_time = datetime(
+                            current_date.year,
+                            current_date.month,
+                            current_date.day,
+                            hour
+                        )
+                        available_times.append(match_time)
+                current_date += timedelta(days=1)
+            return available_times
+
+        # 為每個分組生成循環賽賽程
+        def generate_group_schedule(teams, other_group_teams, used_times):
+            schedule = []
+            # 獲取另一組隊伍的裁判次數
+            referee_counts = get_referee_counts(other_group_teams)
+            
+            # 獲取所有可用的時間
+            all_available_times = generate_available_times()
+            # 過濾掉已使用的時間
+            available_times = [t for t in all_available_times if t not in used_times]
+            
+            required_matches = len(list(combinations(teams, 2)))
+            if len(available_times) < required_matches:
+                flash(f"❌ 可用的比賽時間不足")
+                return [], used_times
+            
+            time_index = 0
+            
+            for team1, team2 in combinations(teams, 2):
+                # 找出另一組中擔任裁判次數最少的隊伍
+                min_count = min(referee_counts.values())
+                available_referees = [team for team in other_group_teams 
+                                    if referee_counts[team.id] == min_count]
+                referee = random.choice(available_referees)
+                
+                # 更新裁判次數
+                referee_counts[referee.id] += 1
+                
+                # 獲取隊伍 ID
+                team1_obj = Team.query.filter_by(name=team1, team_type=team_type).first()
+                team2_obj = Team.query.filter_by(name=team2, team_type=team_type).first()
+                referee_obj = referee
+
+                if not team1_obj or not team2_obj:
+                    flash(f"❌ 找不到隊伍：{team1 if not team1_obj else team2}")
+                    return [], used_times
+
+                # 檢查是否已存在相同的比賽
+                existing_match = Match.query.filter(
+                    ((Match.team1_id == team1_obj.id) & (Match.team2_id == team2_obj.id)) |
+                    ((Match.team1_id == team2_obj.id) & (Match.team2_id == team1_obj.id))
+                ).first()
+
+                if not existing_match:
+                    # 建立比賽
+                    match = Match(
+                        team1_id=team1_obj.id,
+                        team2_id=team2_obj.id,
+                        referee_id=referee_obj.id,
+                        match_time=available_times[time_index]
+                    )
+                    used_times.add(available_times[time_index])
+                    time_index += 1
+                    schedule.append(match)
+
+            return schedule, used_times
+
         # 獲取隊伍對象
         group_a_teams = [Team.query.filter_by(name=name, team_type=team_type).first() for name in group_a]
         group_b_teams = [Team.query.filter_by(name=name, team_type=team_type).first() for name in group_b]
 
+        # 用於追蹤已使用的時間
+        used_times = set()
+
         # 生成 A 組和 B 組的賽程
-        schedule_a = generate_group_schedule(group_a, group_b_teams)
-        schedule_b = generate_group_schedule(group_b, group_a_teams)
+        schedule_a, used_times = generate_group_schedule(group_a, group_b_teams, used_times)
+        if not schedule_a:
+            return redirect(url_for('main.draw_teams', team_type=team_type))
+            
+        schedule_b, used_times = generate_group_schedule(group_b, group_a_teams, used_times)
+        if not schedule_b:
+            return redirect(url_for('main.draw_teams', team_type=team_type))
 
         # 將所有比賽保存到資料庫
         for match in schedule_a + schedule_b:
@@ -171,7 +246,7 @@ def generate_schedule():
         # 查詢所有新生成的比賽
         matches = Match.query.filter(
             Match.team1.has(team_type=team_type)
-        ).order_by(Match.team1_id, Match.team2_id).all()
+        ).order_by(Match.match_time).all()
 
         flash("✅ 賽程已成功生成")
         return render_template('draw_teams.html', 
@@ -179,72 +254,13 @@ def generate_schedule():
                              group_a=group_a_teams, 
                              group_b=group_b_teams,
                              matches=matches)
+    except ValueError as e:
+        flash(f"❌ 日期格式錯誤：{str(e)}")
+        return redirect(url_for('main.draw_teams', team_type=team_type))
     except Exception as e:
         db.session.rollback()
         flash(f"❌ 生成賽程時發生錯誤：{str(e)}")
-
-# 還在處理當中
-@main.route('/admin/create_competition', methods=['GET', 'POST'])
-@login_required
-def create_competition():
-    if current_user.role != 'admin':
-        return "❌ 無權限進入", 403
-
-    teams = Team.query.all()
-
-    if request.method == 'POST':
-        team1_id = int(request.form['team1'])
-        team2_id = request.form.get('team2')
-        if not team2_id:
-            flash("❌ 請選擇隊伍 2")
-            return redirect(url_for('main.create_match'))
-        team2_id = int(team2_id)
-        referee_id = int(request.form['referee'])
-        match_time_str = request.form.get("match_time")
-        match_time = datetime.strptime(match_time_str, "%Y-%m-%dT%H:%M")
-
-        team1 = Team.query.get(team1_id)
-        team2 = Team.query.get(team2_id)
-        referee = Team.query.get(referee_id)
-
-        # 限制條件檢查
-        if team1.id == team2.id:
-            flash("❌ 隊伍不可相同")
-            return redirect(url_for('main.create_competition'))
-
-        if team1.team_type != team2.team_type:
-            flash("❌ 必須同為男排或同為女排")
-            return redirect(url_for('main.create_competition'))
-
-        if team1.team_cycle != team2.team_cycle:
-            flash("❌ 必須同為 A 組或同為 B 組")
-            return redirect(url_for('main.create_competition'))
-
-        if referee.id in [team1.id, team2.id]:
-            flash("❌ 裁判不能是參賽隊伍")
-            return redirect(url_for('main.create_competition'))
-
-        if referee.team_type != team1.team_type:
-            flash("❌ 裁判需與比賽隊伍為相同排別（男排或女排）")
-            return redirect(url_for('main.create_competition'))
-
-        if referee.team_cycle == team1.team_cycle:
-            flash("❌ 裁判必須與參賽隊伍不同組別")
-            return redirect(url_for('main.create_competition'))
-
-        # 建立比賽
-        match = Competition(
-            team1_id=team1.id,
-            team2_id=team2.id,
-            referee_id=referee.id,
-            match_time=match_time
-        )
-        db.session.add(match)
-        db.session.commit()
-        flash("比賽已建立成功")
-        return redirect(url_for('main.create_competition'))
-
-    return render_template('create_competition.html', teams=teams)
+        return redirect(url_for('main.draw_teams', team_type=team_type))
 
 # Dashboard 主頁（根據角色顯示）
 @main.route('/dashboard')

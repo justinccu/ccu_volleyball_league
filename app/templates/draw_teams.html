@@ -48,6 +48,16 @@
             {% for team in group_b %}
                 <input type="hidden" name="group_b" value="{{ team.name }}">
             {% endfor %}
+            <div class="mb-3">
+                <label for="start_date" class="form-label">開始日期</label>
+                <input type="date" class="form-control" id="start_date" name="start_date" required
+                       value="{{ request.form.get('start_date', '') }}">
+            </div>
+            <div class="mb-3">
+                <label for="end_date" class="form-label">結束日期</label>
+                <input type="date" class="form-control" id="end_date" name="end_date" required
+                       value="{{ request.form.get('end_date', '') }}">
+            </div>
             <button type="submit">生成賽程</button>
         </form>
 
@@ -55,7 +65,7 @@
             {% if messages %}
                 <div style="margin-top: 20px;">
                     {% for message in messages %}
-                        <p>{{ message }}</p>
+                        <p style="color: {% if '❌' in message %}red{% else %}green{% endif %};">{{ message }}</p>
                     {% endfor %}
                 </div>
             {% endif %}
@@ -69,12 +79,14 @@
                         <h4>A 組賽程</h4>
                         <table border="1" style="border-collapse: collapse; width: 100%;">
                             <tr>
+                                <th style="padding: 8px;">比賽時間</th>
                                 <th style="padding: 8px;">隊伍 1</th>
                                 <th style="padding: 8px;">隊伍 2</th>
                                 <th style="padding: 8px;">裁判</th>
                             </tr>
                             {% for match in matches if match.team1.team_cycle == 'A' %}
                                 <tr>
+                                    <td style="padding: 8px;">{{ match.match_time.strftime('%m/%d %H:00') }}</td>
                                     <td style="padding: 8px;">{{ match.team1.name }}</td>
                                     <td style="padding: 8px;">{{ match.team2.name }}</td>
                                     <td style="padding: 8px;">{{ match.referee.name }}</td>
@@ -86,12 +98,14 @@
                         <h4>B 組賽程</h4>
                         <table border="1" style="border-collapse: collapse; width: 100%;">
                             <tr>
+                                <th style="padding: 8px;">比賽時間</th>
                                 <th style="padding: 8px;">隊伍 1</th>
                                 <th style="padding: 8px;">隊伍 2</th>
                                 <th style="padding: 8px;">裁判</th>
                             </tr>
                             {% for match in matches if match.team1.team_cycle == 'B' %}
                                 <tr>
+                                    <td style="padding: 8px;">{{ match.match_time.strftime('%m/%d %H:00') }}</td>
                                     <td style="padding: 8px;">{{ match.team1.name }}</td>
                                     <td style="padding: 8px;">{{ match.team2.name }}</td>
                                     <td style="padding: 8px;">{{ match.referee.name }}</td>
