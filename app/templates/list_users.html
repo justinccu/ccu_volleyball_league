@@ -234,26 +234,6 @@
     <br>
     <hr><br>
 
-    <h2>各隊伍成員一覽</h2>
-    {% for team in teams %}
-    <h3>
-        {{ team.name }} ({{ team.team_type }})
-        {% if team.team_cycle %}
-        - {{ team.team_cycle }}
-        {% endif %}
-    </h3>
-    <ul>
-        {% if team.captain %}
-        <li><strong>隊長</strong>: {{ team.captain.name }} ({{ team.captain.username }})</li>
-        {% endif %}
-        {% for member in team.members %}
-        {% if member.id != team.captain_id %}
-        <li><strong>隊員</strong>: {{ member.name }} ({{ member.username }})</li>
-        {% endif %}
-        {% endfor %}
-    </ul>
-    {% endfor %}
-
 
     <br><a href="/dashboard">回主頁</a>
 </body>

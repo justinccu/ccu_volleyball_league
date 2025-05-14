@@ -262,6 +262,12 @@ def generate_schedule():
         flash(f"❌ 生成賽程時發生錯誤：{str(e)}")
         return redirect(url_for('main.draw_teams', team_type=team_type))
 
+@main.route('/team/list')
+@login_required
+def list_teams():
+    teams = Team.query.all()
+    return render_template('list_team.html', teams=teams)
+
 # Dashboard 主頁（根據角色顯示）
 @main.route('/dashboard')
 @login_required

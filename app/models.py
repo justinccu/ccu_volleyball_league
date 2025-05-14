@@ -54,7 +54,7 @@ class Match(db.Model):
     referee_id = db.Column(db.Integer, db.ForeignKey('team.id'), nullable=False)
 
     # 時間與比賽結果
-    match_time = db.Column(db.DateTime, nullable=False)
+    match_time = db.Column(db.DateTime, nullable=True)
     total_sets = db.Column(db.Integer, nullable=True)
 
     # 分數欄位

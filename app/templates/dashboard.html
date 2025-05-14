@@ -12,6 +12,7 @@
         <ul>
             <li><a href="/admin/users">👥 使用者管理</a></li>
             <li><a href="/admin/draw_teams">🎲 分組抽籤</a></li>
+            <li><a href="/team/list">🏐 隊伍成員查詢</a></li>
         </ul>
     {% endif %}
 
@@ -20,7 +21,7 @@
         <p>你是 {{ current_user.role }}，將來這裡會顯示你隊伍的賽程與比數。</p>
     {% endif %}
 
-    <br><br>
+    <br>
     <a href="/logout">登出</a>
 </body>
 </html>

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>隊伍成員一覽</title>
+    <script>
+        function filterTeams() {
+            const type = document.getElementById('team_type').value;
+            const cycle = document.getElementById('team_cycle').value;
+            const teamBlocks = document.getElementsByClassName('team-block');
+
+            for (const block of teamBlocks) {
+                const blockType = block.getAttribute('data-type');
+                const blockCycle = block.getAttribute('data-cycle');
+
+                const show = (type === '全部' || blockType === type) &&
+                             (cycle === '全部' || blockCycle === cycle);
+                block.style.display = show ? 'block' : 'none';
+            }
+        }
+    </script>
+</head>
+<body>
+    <h2>🏐 隊伍成員查詢</h2>
+
+    <label>隊伍類型：</label>
+    <select id="team_type" onchange="filterTeams()">
+        <option value="全部">全部</option>
+        <option value="男排">男排</option>
+        <option value="女排">女排</option>
+    </select>
+
+    <label>小組：</label>
+    <select id="team_cycle" onchange="filterTeams()">
+        <option value="全部">全部</option>
+        <option value="A">A</option>
+        <option value="B">B</option>
+    </select>
+
+    <hr>
+    {% for team in teams %}
+    <div class="team-block" data-type="{{ team.team_type }}" data-cycle="{{ team.team_cycle }}" style="margin-bottom: 20px;">
+        <h3>{{ team.name }} ({{ team.team_type }} - {{ team.team_cycle or '未分組' }})</h3>
+        <ul>
+            {% if team.captain %}
+            <li><strong>隊長</strong>: {{ team.captain.name }} ({{ team.captain.username }})</li>
+            {% endif %}
+            {% for member in team.members %}
+                {% if member.id != team.captain_id %}
+                <li><strong>隊員</strong>: {{ member.name }} ({{ member.username }})</li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    </div>
+    {% endfor %}
+
+    <script>
+        document.addEventListener('DOMContentLoaded', filterTeams);
+    </script>
+    <br><a href="/dashboard">回主頁</a>
+</body>
+</html>
