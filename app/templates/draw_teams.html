@@ -2,6 +2,19 @@
 <html>
 <head>
     <title>分組抽籤</title>
+    <style>
+        .flash-message {
+            margin-top: 20px;
+        }
+        .text-red {
+            color: red;
+            font-weight: bold;
+        }
+        .text-green {
+            color: green;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
     <h2>分組抽籤</h2>
@@ -63,9 +76,11 @@
 
         {% with messages = get_flashed_messages() %}
             {% if messages %}
-                <div style="margin-top: 20px;">
+                <div class="flash-message">
                     {% for message in messages %}
-                        <p style="color: {% if '❌' in message %}red{% else %}green{% endif %};">{{ message }}</p>
+                        <p class="{% if '❌' in message %}text-red{% else %}text-green{% endif %}">
+                            {{ message }}
+                        </p>
                     {% endfor %}
                 </div>
             {% endif %}

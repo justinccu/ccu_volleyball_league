@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>我的比賽</title>
+</head>
+<body>
+    <h2>🏐 我的比賽清單</h2>
+    {% if team %}
+        <h3>隊伍：{{ team.name }} ({{ team.team_type }} - {{ team.team_cycle or '未分組' }})</h3>
+
+        {% if matches %}
+        <table border="1">
+            <tr>
+                <th>對手隊伍</th>
+                <th>裁判隊伍</th>
+                <th>比賽時間</th>
+                <th>比分</th>
+                <th>勝負</th>
+            </tr>
+            {% for match in matches %}
+            <tr>
+                <td>
+                    {% if match.team1.id == team.id %}
+                        {{ match.team2.name }}
+                    {% else %}
+                        {{ match.team1.name }}
+                    {% endif %}
+                </td>
+                <td>{{ match.referee.name }}</td>
+                <td>{{ match.match_time or '尚未排定' }}</td>
+                <td>
+                    {{ match.team1_set1 or '-' }} : {{ match.team2_set1 or '-' }} 、
+                    {{ match.team1_set2 or '-' }} : {{ match.team2_set2 or '-' }} 、
+                    {{ match.team1_set3 or '-' }} : {{ match.team2_set3 or '-' }}
+                </td>
+                <td>
+                    {% if match.winner_id == team.id %}
+                        ✅ 勝
+                    {% elif match.loser_id == team.id %}
+                        ❌ 敗
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% else %}
+            <p>目前尚無賽程</p>
+        {% endif %}
+
+    {% else %}
+        <p>⚠️ 你尚未加入任何隊伍</p>
+    {% endif %}
+
+    <br>
+    <a href="/dashboard">回主頁</a>
+</body>
+</html>

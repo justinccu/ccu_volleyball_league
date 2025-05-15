@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>審核入隊申請</title>
+</head>
+<body>
+    <h2>入隊申請審核</h2>
+
+    {% if requests %}
+        <table border="1">
+            <tr>
+                <th>申請人姓名</th>
+                <th>帳號</th>
+                <th>系級</th>
+                <th>年級</th>
+                <th>性別</th>
+                <th>操作</th>
+            </tr>
+            {% for req in requests %}
+            <tr>
+                <td>{{ req.user.name }}</td>
+                <td>{{ req.user.username }}</td>
+                <td>{{ req.user.department }}</td>
+                <td>{{ req.user.grade }}</td>
+                <td>{{ req.user.gender }}</td>
+                <td>
+                    <form method="POST" action="{{ url_for('main.approve_join', request_id=req.id) }}" style="display:inline;">
+                        <button type="submit">✅ 同意</button>
+                    </form>
+                    <form method="POST" action="{{ url_for('main.reject_join', request_id=req.id) }}" style="display:inline;">
+                        <button type="submit">❌ 拒絕</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <p>目前沒有待審核的入隊申請。</p>
+    {% endif %}
+
+    <br>
+    <a href="/dashboard">回主頁</a>
+</body>
+</html>

@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_user, logout_user, login_required, current_user
-from .models import User, Team, Match
+from .models import User, Team, Match, JoinRequest
 from . import db, bcrypt
 from itertools import combinations
 import random
@@ -22,7 +22,6 @@ def login():
         if user and bcrypt.check_password_hash(user.password, request.form['password']):
             login_user(user)
             return redirect(url_for('main.dashboard'))
-        flash('登入失敗，請檢查帳號密碼')
     return render_template('login.html')
 
 # 註冊（預設為隊長）
@@ -37,7 +36,6 @@ def register():
         user = User(username=request.form['username'], password=hashed_pw, name = request.form.get('name'), role='visitor')
         db.session.add(user)
         db.session.commit()
-        flash('註冊成功，請登入')
         return redirect(url_for('main.login'))
     return render_template('register.html')
 
@@ -81,7 +79,6 @@ def draw_teams():
         try:
             Match.query.delete()
             db.session.commit()
-            flash("已清除所有比賽記錄")
         except Exception as e:
             db.session.rollback()
             flash(f"清除比賽記錄時發生錯誤：{str(e)}")
@@ -267,6 +264,77 @@ def generate_schedule():
 def list_teams():
     teams = Team.query.all()
     return render_template('list_team.html', teams=teams)
+
+@main.route('/my/matches')
+@login_required
+def my_matches():
+    if current_user.role not in ['captain', 'member']:
+        return "❌ 僅限隊長與隊員查看", 403
+
+    team = current_user.team
+    if not team:
+        return render_template('my_matches.html', team=None, matches=[])
+
+    matches = Match.query.filter(
+        (Match.team1_id == team.id) | (Match.team2_id == team.id)
+    ).all()
+
+    return render_template('my_matches.html', team=team, matches=matches)
+
+@main.route('/join/request', methods=['GET', 'POST'])
+@login_required
+def join_request():
+    if current_user.team_id:
+        flash("你已經加入隊伍")
+        return redirect(url_for('main.dashboard'))
+
+    pending_request = JoinRequest.query.filter_by(user_id=current_user.id, status='pending').first()
+
+    if request.method == 'POST' and not pending_request:
+        team_id = request.form['team_id']
+        jr = JoinRequest(user_id=current_user.id, team_id=team_id)
+        db.session.add(jr)
+        db.session.commit()
+        flash("已送出申請，請等待隊長審核")
+        return redirect(url_for('main.join_request'))
+
+    teams = Team.query.all()
+    return render_template('join_team_request.html', teams=teams, pending_request=pending_request)
+
+@main.route('/captain/requests')
+@login_required
+def view_join_requests():
+    if current_user.role != 'captain' or not current_user.team:
+        return "❌ 僅限隊長操作", 403
+    team = current_user.team
+    requests = JoinRequest.query.filter_by(team_id=team.id, status='pending').all()
+    return render_template('approve_join_request.html', requests=requests)
+
+@main.route('/captain/approve/<int:request_id>', methods=['POST'])
+@login_required
+def approve_join(request_id):
+    req = JoinRequest.query.get_or_404(request_id)
+    if current_user.id != req.team.captain_id:
+        return "❌ 僅限該隊隊長審核", 403
+
+    req.status = 'approved'
+    req.user.team_id = req.team_id
+    req.user.role = 'member'
+    db.session.commit()
+    flash(f"✅ {req.user.name} 已加入 {req.team.name}")
+    return redirect(url_for('main.view_join_requests'))
+
+@main.route('/captain/reject/<int:request_id>', methods=['POST'])
+@login_required
+def reject_join(request_id):
+    req = JoinRequest.query.get_or_404(request_id)
+    if current_user.id != req.team.captain_id:
+        return "❌ 僅限該隊隊長審核", 403
+
+    req.status = 'rejected'
+    db.session.commit()
+    flash(f"❌ 已拒絕 {req.user.name} 的申請")
+    return redirect(url_for('main.view_join_requests'))
 
 # Dashboard 主頁（根據角色顯示）
 @main.route('/dashboard')

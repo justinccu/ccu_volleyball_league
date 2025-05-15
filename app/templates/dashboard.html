@@ -17,11 +17,21 @@
     {% endif %}
 
     {% if current_user.role in ['captain', 'member'] %}
-        <h3>我的比賽（開發中）</h3>
-        <p>你是 {{ current_user.role }}，將來這裡會顯示你隊伍的賽程與比數。</p>
+        <h3>📅 我的比賽</h3>
+        <a href="/my/matches"><button>查看我的比賽</button></a>
     {% endif %}
 
-    <br>
+    {% if current_user.role == 'captain' %}
+        <h3>📝 入隊申請審核</h3>
+        <a href="/captain/requests"><button>查看待審核申請</button></a>
+    {% endif %}
+
+    {% if current_user.role == 'visitor' %}
+        <h3>📨 加入隊伍</h3>
+        <a href="/join/request"><button>申請加入隊伍</button></a>
+    {% endif %}
+
+    <br><br>
     <a href="/logout">登出</a>
 </body>
 </html>

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>申請加入隊伍</title>
+</head>
+<body>
+    <h2>📨 申請加入隊伍</h2>
+
+    {% if current_user.team %}
+        <p>你已經是 {{ current_user.team.name }} 隊的一員，無法再次申請。</p>
+    {% elif pending_request %}
+        <p>你已提出加入 <strong>{{ pending_request.team.name }}</strong> 的申請，請等待該隊隊長審核。</p>
+    {% else %}
+        <form method="POST">
+            <label>選擇欲加入隊伍：</label>
+            <select name="team_id" required>
+                {% for team in teams %}
+                <option value="{{ team.id }}">{{ team.name }} ({{ team.team_type }} - {{ team.team_cycle or '未分組' }})</option>
+                {% endfor %}
+            </select>
+            <br><br>
+            <button type="submit">提出申請</button>
+        </form>
+    {% endif %}
+
+    <br>
+    <a href="/dashboard">回主頁</a>
+</body>
+</html>

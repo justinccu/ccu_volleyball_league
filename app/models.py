@@ -41,8 +41,6 @@ class Team(db.Model):
     members = db.relationship('User', backref='team', lazy=True, foreign_keys='User.team_id')
 
 
-# models.py (加入於 Match 類別內)
-
 class Match(db.Model):
     __tablename__ = 'match'
 
@@ -83,4 +81,15 @@ class Match(db.Model):
     __table_args__ = (
         db.UniqueConstraint('team1_id', 'team2_id', name='unique_match_teams'),
     )
+    
+class JoinRequest(db.Model):
+    __tablename__ = 'join_request'
+    id = db.Column(db.Integer, primary_key=True)
 
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    team_id = db.Column(db.Integer, db.ForeignKey('team.id'), nullable=False)
+    status = db.Column(db.String(20), default='pending')  # pending / approved / rejected
+
+    user = db.relationship('User', backref='join_request')
+    team = db.relationship('Team', backref='join_requests')
+    
