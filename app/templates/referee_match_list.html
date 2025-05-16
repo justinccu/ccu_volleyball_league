@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>裁判登錄比賽結果</title>
+    <style>
+        .status-confirmed {
+            color: green;
+            font-weight: bold;
+        }
+        .status-rejected {
+            color: red;
+            font-weight: bold;
+        }
+        .status-pending {
+            color: orange;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h2>🎯 裁判登錄比賽結果</h2>
+    <table border="1">
+        <tr>
+            <th>隊伍1</th>
+            <th>隊伍2</th>
+            <th>比賽時間</th>
+            <th>狀態</th>
+            <th>操作</th>
+        </tr>
+        {% for match in matches %}
+        <tr>
+            <td>{{ match.team1.name }}</td>
+            <td>{{ match.team2.name }}</td>
+            <td>{{ match.match_time or '尚未排定' }}</td>
+            <td>
+                {% if match.status == 'pending' %}
+                    <span class="status-pending">尚未登錄</span>
+                {% elif match.status == 'waiting_confirm' %}
+                    <span class="status-pending">等待確認 - 
+                        {{ match.team1.name }}: {{ '✅' if match.team1_confirmed else '❓' }}、
+                        {{ match.team2.name }}: {{ '✅' if match.team2_confirmed else '❓' }}
+                    </span>
+                {% elif match.status == 'confirmed' %}
+                    <span class="status-confirmed">✅ 雙方已確認</span>
+                {% elif match.status == 'rejected' %}
+                    <span class="status-rejected">❌ 有隊伍拒絕結果，請重新登錄</span>
+                {% else %}
+                    -
+                {% endif %}
+            </td>
+            <td>
+                {% if match.status == 'pending' or match.status == 'rejected' %}
+                    <a href="{{ url_for('main.submit_match_result', match_id=match.id) }}">✏️ 登錄成績</a>
+                {% else %}
+                    <span style="color:gray;">已登錄</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+    <br>
+    <a href="/dashboard">回主頁</a>
+</body>
+</html>

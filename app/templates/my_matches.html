@@ -2,6 +2,19 @@
 <html>
 <head>
     <title>我的比賽</title>
+    <style>
+        .flash-message {
+            margin-top: 20px;
+        }
+        .text-red {
+            color: red;
+            font-weight: bold;
+        }
+        .text-green {
+            color: green;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
     <h2>🏐 我的比賽清單</h2>
@@ -16,6 +29,7 @@
                 <th>比賽時間</th>
                 <th>比分</th>
                 <th>勝負</th>
+                <th>確認狀態</th>
             </tr>
             {% for match in matches %}
             <tr>
@@ -38,6 +52,33 @@
                         ✅ 勝
                     {% elif match.loser_id == team.id %}
                         ❌ 敗
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td>
+                    {% if match.status == 'waiting_confirm' %}
+                        {% if team.id == match.team1_id and not match.team1_confirmed %}
+                            <form method="POST" action="{{ url_for('main.confirm_match', match_id=match.id) }}" style="display:inline;">
+                                <button type="submit">✅ 確認</button>
+                            </form>
+                            <form method="POST" action="{{ url_for('main.reject_match', match_id=match.id) }}" style="display:inline;">
+                                <button type="submit" class="text-red">❌ 不確認</button>
+                            </form>
+                        {% elif team.id == match.team2_id and not match.team2_confirmed %}
+                            <form method="POST" action="{{ url_for('main.confirm_match', match_id=match.id) }}" style="display:inline;">
+                                <button type="submit">✅ 確認</button>
+                            </form>
+                            <form method="POST" action="{{ url_for('main.reject_match', match_id=match.id) }}" style="display:inline;">
+                                <button type="submit" class="text-red">❌ 不確認</button>
+                            </form>
+                        {% else %}
+                            ✅ 已確認
+                        {% endif %}
+                    {% elif match.status == 'confirmed' %}
+                        ✅ 雙方已確認
+                    {% elif match.status == 'rejected' %}
+                        ❌ 有隊伍不確認，請重新登錄比賽結果
                     {% else %}
                         -
                     {% endif %}

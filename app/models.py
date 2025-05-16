@@ -2,7 +2,7 @@ from . import db
 from flask_login import UserMixin
 from . import login_manager
 from sqlalchemy import UniqueConstraint
-
+from datetime import datetime
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
@@ -77,6 +77,12 @@ class Match(db.Model):
     referee = db.relationship('Team', foreign_keys=[referee_id])
     winner = db.relationship('Team', foreign_keys=[winner_id])
     loser = db.relationship('Team', foreign_keys=[loser_id])
+    
+    # Match 中新增以下欄位
+    status = db.Column(db.String(20), default='pending')  # pending, waiting_confirm, confirmed
+    team1_confirmed = db.Column(db.Boolean, default=False)
+    team2_confirmed = db.Column(db.Boolean, default=False)
+    result_submitted_by = db.Column(db.Integer, db.ForeignKey('user.id'))  # 登錄人（裁判隊長）
 
     __table_args__ = (
         db.UniqueConstraint('team1_id', 'team2_id', name='unique_match_teams'),
@@ -92,4 +98,3 @@ class JoinRequest(db.Model):
 
     user = db.relationship('User', backref='join_request')
     team = db.relationship('Team', backref='join_requests')
-    

@@ -56,7 +56,7 @@
         </select>
 
         <!-- 隊長輸入隊名 -->
-        <!-- 隊長輸入隊名與性別 -->
+        <!-- 隊長輸入隊名與類別 -->
         <div id="new_team_section" style="margin-top: 5px;">
             <label>新隊伍名稱：</label>
             <input type="text" name="new_team_name">
@@ -73,7 +73,7 @@
             <label>選擇加入隊伍：</label>
             <select name="team_id">
                 {% for team in teams %}
-                <option value="{{ team.id }}">{{ team.name }}</option>
+                <option value="{{ team.id }}">{{ team.name }}({{team.team_type}})</option>
                 {% endfor %}
             </select>
         </div>

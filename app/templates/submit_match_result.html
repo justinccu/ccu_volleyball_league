@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>登錄比賽結果</title>
+    <style>
+        .flash-message {
+            margin-top: 20px;
+        }
+        .text-red {
+            color: red;
+            font-weight: bold;
+        }
+        .text-green {
+            color: green;
+            font-weight: bold;
+        }
+    </style>
+    <script>
+        function updateWinner() {
+            const t1s1 = parseInt(document.querySelector('input[name="team1_set1"]').value || 0);
+            const t2s1 = parseInt(document.querySelector('input[name="team2_set1"]').value || 0);
+            const t1s2 = parseInt(document.querySelector('input[name="team1_set2"]').value || 0);
+            const t2s2 = parseInt(document.querySelector('input[name="team2_set2"]').value || 0);
+            const t1s3 = parseInt(document.querySelector('input[name="team1_set3"]').value || 0);
+            const t2s3 = parseInt(document.querySelector('input[name="team2_set3"]').value || 0);
+
+            let team1_win = 0;
+            let team2_win = 0;
+
+            if (t1s1 || t2s1) team1_win += t1s1 > t2s1 ? 1 : (t1s1 < t2s1 ? 0 : 0);
+            if (t1s2 || t2s2) team1_win += t1s2 > t2s2 ? 1 : (t1s2 < t2s2 ? 0 : 0);
+            if (t1s3 || t2s3) team1_win += t1s3 > t2s3 ? 1 : (t1s3 < t2s3 ? 0 : 0);
+
+            team2_win = (t1s1 || t2s1 ? 1 : 0) + (t1s2 || t2s2 ? 1 : 0) + (t1s3 || t2s3 ? 1 : 0) - team1_win;
+
+            const team1_name = document.getElementById("team1_name").textContent;
+            const team2_name = document.getElementById("team2_name").textContent;
+            const resultText = document.getElementById("winner_result");
+
+            if (team1_win + team2_win >= 2) {
+                if (team1_win > team2_win) {
+                    resultText.textContent = `🏆 最終勝方：${team1_name}　｜ 敗方：${team2_name}`;
+                } else if (team2_win > team1_win) {
+                    resultText.textContent = `🏆 最終勝方：${team2_name}　｜ 敗方：${team1_name}`;
+                } else {
+                    resultText.textContent = '';
+                }
+            } else {
+                resultText.textContent = '';
+            }
+        }
+
+        function validateForm() {
+            const set1_team1 = parseInt(document.querySelector('input[name="team1_set1"]').value || 0);
+            const set1_team2 = parseInt(document.querySelector('input[name="team2_set1"]').value || 0);
+            const set2_team1 = parseInt(document.querySelector('input[name="team1_set2"]').value || 0);
+            const set2_team2 = parseInt(document.querySelector('input[name="team2_set2"]').value || 0);
+            const set3_team1 = parseInt(document.querySelector('input[name="team1_set3"]').value || 0);
+            const set3_team2 = parseInt(document.querySelector('input[name="team2_set3"]').value || 0);
+
+            const lamp1 = parseInt(document.querySelector('input[name="team1_lamp_fee"]').value || 0);
+            const lamp2 = parseInt(document.querySelector('input[name="team2_lamp_fee"]').value || 0);
+
+            if ((lamp1 + lamp2) > 80) {
+                alert("兩隊總燈錢不得超過 80 元");
+                return false;
+            }
+
+            let team1_win = 0;
+            let team2_win = 0;
+            if (set1_team1 > set1_team2) team1_win++; else team2_win++;
+            if (set2_team1 > set2_team2) team1_win++; else team2_win++;
+            if (team1_win === 1 && team2_win === 1) {
+                if (!set3_team1 || !set3_team2) {
+                    alert("前兩局雙方各贏一局，請填寫第三局比分");
+                    return false;
+                }
+                if (set3_team1 > set3_team2) team1_win++; else team2_win++;
+            }
+
+            return true;
+        }
+    </script>
+</head>
+<body>
+    <h2>📋 登錄比賽結果</h2>
+
+    <p id="winner_result" style="font-weight:bold; color:green;"></p>
+
+    <p><strong>比賽隊伍:</strong> <span id="team1_name">{{ match.team1.name }}</span> vs <span id="team2_name">{{ match.team2.name }}</span></p>
+    <p><strong>裁判隊伍:</strong> {{ match.referee.name }}</p>
+    <p><strong>比賽時間:</strong> {{ match.match_time or '尚未設定' }}</p>
+
+    <form method="POST" onsubmit="return validateForm()">
+        <h4>比分紀錄(最多三局)</h4>
+        <label>第1局:</label>
+        <input type="number" name="team1_set1" required oninput="updateWinner()"> : 
+        <input type="number" name="team2_set1" required oninput="updateWinner()"><br>
+
+        <label>第2局:</label>
+        <input type="number" name="team1_set2" required oninput="updateWinner()"> : 
+        <input type="number" name="team2_set2" required oninput="updateWinner()"><br>
+
+        <label>第3局:</label>
+        <input type="number" name="team1_set3" oninput="updateWinner()"> : 
+        <input type="number" name="team2_set3" oninput="updateWinner()"><br>
+
+        <br>
+        <label>燈錢({{ match.team1.name }}):</label>
+        <input type="number" name="team1_lamp_fee" required><br>
+
+        <label>燈錢({{ match.team2.name }}):</label>
+        <input type="number" name="team2_lamp_fee" required><br>
+
+        <br>
+        <button type="submit">登錄比賽結果</button>
+    </form>
+
+    <br>
+    <a href="/dashboard">回主頁</a>
+</body>
+</html>

@@ -336,6 +336,145 @@ def reject_join(request_id):
     flash(f"❌ 已拒絕 {req.user.name} 的申請")
     return redirect(url_for('main.view_join_requests'))
 
+@main.route('/my/team_members')
+@login_required
+def team_members():
+    if current_user.team is None:
+        flash("❌ 你尚未加入任何隊伍")
+        return redirect(url_for('main.dashboard'))
+    return render_template('team_members.html', team=current_user.team)
+
+@main.route('/referee/submit_result/<int:match_id>', methods=['GET', 'POST'])
+@login_required
+def submit_match_result(match_id):
+    match = Match.query.get_or_404(match_id)
+
+    # 僅允許裁判隊伍的隊長操作
+    if current_user.role != 'captain' or not current_user.team or match.referee_id != current_user.team.id:
+        return "❌ 僅裁判隊伍之隊長可登錄比賽成績", 403
+
+    if request.method == 'POST':
+        team1_set1 = int(request.form['team1_set1'])
+        team2_set1 = int(request.form['team2_set1'])
+        team1_set2 = int(request.form['team1_set2'])
+        team2_set2 = int(request.form['team2_set2'])
+        team1_set3 = request.form.get('team1_set3')
+        team2_set3 = request.form.get('team2_set3')
+        team1_lamp = int(request.form['team1_lamp_fee'])
+        team2_lamp = int(request.form['team2_lamp_fee'])
+
+        # 設定分數
+        match.team1_set1 = team1_set1
+        match.team2_set1 = team2_set1
+        match.team1_set2 = team1_set2
+        match.team2_set2 = team2_set2
+        match.team1_set3 = int(team1_set3) if team1_set3 else None
+        match.team2_set3 = int(team2_set3) if team2_set3 else None
+        match.team1_lamp_fee = team1_lamp
+        match.team2_lamp_fee = team2_lamp
+
+        # 自動計算勝負
+        team1_win = 0
+        team2_win = 0
+        if team1_set1 > team2_set1:
+            team1_win += 1
+        else:
+            team2_win += 1
+
+        if team1_set2 > team2_set2:
+            team1_win += 1
+        else:
+            team2_win += 1
+
+        if team1_win == 1 and team2_win == 1:
+            if team1_set3 is not None and team2_set3 is not None:
+                if int(team1_set3) > int(team2_set3):
+                    team1_win += 1
+                else:
+                    team2_win += 1
+            else:
+                flash("⚠️ 前兩局打平，請補第三局成績")
+                return redirect(request.url)
+
+        if team1_win > team2_win:
+            match.winner_id = match.team1_id
+            match.loser_id = match.team2_id
+        else:
+            match.winner_id = match.team2_id
+            match.loser_id = match.team1_id
+
+        match.status = 'waiting_confirm'
+        match.team1_confirmed = False
+        match.team2_confirmed = False
+        match.result_submitted_by = current_user.id
+
+        db.session.commit()
+        flash("✅ 成績已成功登錄，等待雙方確認")
+        return redirect(url_for('main.referee_matches'))
+
+    return render_template('submit_match_result.html', match=match)
+
+@main.route('/match/confirm/<int:match_id>', methods=['POST'])
+@login_required
+def confirm_match(match_id):
+    match = Match.query.get_or_404(match_id)
+    team = current_user.team
+
+    # ✅ 僅限比賽雙方隊伍的「隊長」可以操作
+    if (
+        current_user.role != 'captain' or
+        not team or
+        team.id not in [match.team1_id, match.team2_id]
+    ):
+        return "❌ 僅限參賽隊伍的隊長可操作", 403
+
+    # 更新該隊的確認狀態
+    if team.id == match.team1_id:
+        match.team1_confirmed = True
+    elif team.id == match.team2_id:
+        match.team2_confirmed = True
+
+    # 若兩隊皆已確認，則標記為 confirmed
+    if match.team1_confirmed and match.team2_confirmed:
+        match.status = 'confirmed'
+
+    db.session.commit()
+    flash("✅ 你已確認比賽結果")
+    return redirect(url_for('main.my_matches'))
+
+@main.route('/match/reject/<int:match_id>', methods=['POST'])
+@login_required
+def reject_match(match_id):
+    match = Match.query.get_or_404(match_id)
+    team = current_user.team
+
+    if (
+        current_user.role != 'captain' or
+        not team or
+        team.id not in [match.team1_id, match.team2_id]
+    ):
+        return "❌ 僅限參賽隊伍的隊長可操作", 403
+
+    match.status = 'rejected'
+    match.team1_confirmed = False
+    match.team2_confirmed = False
+    db.session.commit()
+    flash("❌ 你已拒絕此比賽結果，請裁判重新登錄")
+    return redirect(url_for('main.my_matches'))
+
+@main.route('/referee/matches')
+@login_required
+def referee_matches():
+    if current_user.role != 'captain' or not current_user.team:
+        return "❌ 僅限隊長操作", 403
+
+    # 顯示所有由該隊伍擔任裁判的比賽，不論狀態
+    matches = Match.query.filter(
+        Match.referee_id == current_user.team.id
+    ).order_by(Match.match_time.desc().nullslast()).all()
+
+    return render_template('referee_match_list.html', matches=matches)
+
 # Dashboard 主頁（根據角色顯示）
 @main.route('/dashboard')
 @login_required

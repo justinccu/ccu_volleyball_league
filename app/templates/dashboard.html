@@ -2,8 +2,23 @@
 <html>
 <head>
     <title>主頁</title>
+    <style>
+        .flash-message {
+            margin-top: 20px;
+        }
+        .text-red {
+            color: red;
+            font-weight: bold;
+        }
+        .text-green {
+            color: green;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
+    <h1>🏐 排球聯賽系統</h1>
+
     <h2>歡迎, {{ current_user.name }}!</h2>
     <p>這裡將顯示你的比賽與帳號管理功能</p>
 
@@ -19,11 +34,17 @@
     {% if current_user.role in ['captain', 'member'] %}
         <h3>📅 我的比賽</h3>
         <a href="/my/matches"><button>查看我的比賽</button></a>
+
+        <h3>👨‍👩‍👧‍👦 我的隊伍成員</h3>
+        <a href="/my/team_members"><button>查看成員列表</button></a>
     {% endif %}
 
     {% if current_user.role == 'captain' %}
         <h3>📝 入隊申請審核</h3>
         <a href="/captain/requests"><button>查看待審核申請</button></a>
+
+        <h3>🎯 裁判登錄比賽結果</h3>
+        <a href="/referee/matches"><button>我要登錄成績</button></a>
     {% endif %}
 
     {% if current_user.role == 'visitor' %}

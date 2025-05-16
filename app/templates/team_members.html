@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>我的隊伍成員</title>
+    <style>
+        .flash-message {
+            margin-top: 20px;
+        }
+        .text-red {
+            color: red;
+            font-weight: bold;
+        }
+        .text-green {
+            color: green;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h2>🏐 我的隊伍：{{ team.name }}({{ team.team_type }} | {{ team.team_cycle or '未分組' }})</h2>
+
+    <h3>👑 隊長</h3>
+    {% if team.captain %}
+        <p>{{ team.captain.name }}({{ team.captain.username }})</p>
+    {% else %}
+        <p>尚未指定隊長</p>
+    {% endif %}
+
+    <h3>👥 隊員列表</h3>
+        {% for member in team.members %}
+            {% if member.id != team.captain_id %}
+                <p>{{ member.name }}({{ member.department }} / {{ member.grade }}年級 / {{ member.gender }})</p>
+            {% endif %}
+        {% endfor %}
+
+    <br>
+    <a href="{{ url_for('main.dashboard') }}">🔙 回主頁</a>
+</body>
+</html>
