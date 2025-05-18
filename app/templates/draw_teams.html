@@ -66,11 +66,6 @@
                 <input type="date" class="form-control" id="start_date" name="start_date" required
                        value="{{ request.form.get('start_date', '') }}">
             </div>
-            <div class="mb-3">
-                <label for="end_date" class="form-label">結束日期</label>
-                <input type="date" class="form-control" id="end_date" name="end_date" required
-                       value="{{ request.form.get('end_date', '') }}">
-            </div>
             <button type="submit">生成賽程</button>
         </form>
 
@@ -89,44 +84,30 @@
         {% if matches %}
             <div style="margin-top: 30px;">
                 <h3>已生成的賽程</h3>
-                <div style="display: flex; gap: 50px;">
+                <div style="display: flex; flex-direction: column; gap: 30px;">
                     <div>
                         <h4>A 組賽程</h4>
-                        <table border="1" style="border-collapse: collapse; width: 100%;">
-                            <tr>
-                                <th style="padding: 8px;">比賽時間</th>
-                                <th style="padding: 8px;">隊伍 1</th>
-                                <th style="padding: 8px;">隊伍 2</th>
-                                <th style="padding: 8px;">裁判</th>
-                            </tr>
+                        <div style="display: flex; flex-wrap: wrap; gap: 20px;">
                             {% for match in matches if match.team1.team_cycle == 'A' %}
-                                <tr>
-                                    <td style="padding: 8px;">{{ match.match_time.strftime('%m/%d %H:00') }}</td>
-                                    <td style="padding: 8px;">{{ match.team1.name }}</td>
-                                    <td style="padding: 8px;">{{ match.team2.name }}</td>
-                                    <td style="padding: 8px;">{{ match.referee.name }}</td>
-                                </tr>
+                                <div style="border: 1px solid #ccc; padding: 10px; border-radius: 5px; min-width: 200px;">
+                                    <div><strong>時間：</strong>{{ match.match_time.strftime('%m/%d %H:00') }}</div>
+                                    <div><strong>隊伍：</strong>{{ match.team1.name }} vs {{ match.team2.name }}</div>
+                                    <div><strong>裁判：</strong>{{ match.referee.name }}</div>
+                                </div>
                             {% endfor %}
-                        </table>
+                        </div>
                     </div>
                     <div>
                         <h4>B 組賽程</h4>
-                        <table border="1" style="border-collapse: collapse; width: 100%;">
-                            <tr>
-                                <th style="padding: 8px;">比賽時間</th>
-                                <th style="padding: 8px;">隊伍 1</th>
-                                <th style="padding: 8px;">隊伍 2</th>
-                                <th style="padding: 8px;">裁判</th>
-                            </tr>
+                        <div style="display: flex; flex-wrap: wrap; gap: 20px;">
                             {% for match in matches if match.team1.team_cycle == 'B' %}
-                                <tr>
-                                    <td style="padding: 8px;">{{ match.match_time.strftime('%m/%d %H:00') }}</td>
-                                    <td style="padding: 8px;">{{ match.team1.name }}</td>
-                                    <td style="padding: 8px;">{{ match.team2.name }}</td>
-                                    <td style="padding: 8px;">{{ match.referee.name }}</td>
-                                </tr>
+                                <div style="border: 1px solid #ccc; padding: 10px; border-radius: 5px; min-width: 200px;">
+                                    <div><strong>時間：</strong>{{ match.match_time.strftime('%m/%d %H:00') }}</div>
+                                    <div><strong>隊伍：</strong>{{ match.team1.name }} vs {{ match.team2.name }}</div>
+                                    <div><strong>裁判：</strong>{{ match.referee.name }}</div>
+                                </div>
                             {% endfor %}
-                        </table>
+                        </div>
                     </div>
                 </div>
             </div>

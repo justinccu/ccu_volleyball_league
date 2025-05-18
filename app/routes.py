@@ -6,6 +6,7 @@ from itertools import combinations
 import random
 from datetime import datetime, timedelta
 from . import route_ManageUser
+import math
 
 main = Blueprint('main', __name__)
 
@@ -112,27 +113,43 @@ def generate_schedule():
     group_a = request.form.getlist('group_a')
     group_b = request.form.getlist('group_b')
     start_date_str = request.form.get('start_date')
-    end_date_str = request.form.get('end_date')
 
     if not team_type or not group_a or not group_b:
         flash("❌ 缺少必要資訊：請確保已選擇隊伍類型並完成分組")
         return redirect(url_for('main.draw_teams', team_type=team_type))
 
-    if not start_date_str or not end_date_str:
-        flash("❌ 請選擇比賽開始和結束日期")
+    if not start_date_str:
+        flash("❌ 請選擇比賽開始日期")
         return redirect(url_for('main.draw_teams', team_type=team_type))
 
     try:
         Match.query.delete()
         db.session.commit()
+        
         # 驗證日期格式
         start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
-        end_date = datetime.strptime(end_date_str, "%Y-%m-%d")
         
-        if start_date > end_date:
-            flash("❌ 開始日期不能晚於結束日期")
-            return redirect(url_for('main.draw_teams', team_type=team_type))
-
+        # 計算需要的比賽場數
+        def calculate_required_matches(teams):
+            return len(list(combinations(teams, 2)))
+        
+        # 計算總比賽場數
+        total_matches = calculate_required_matches(group_a) + calculate_required_matches(group_b)
+        
+        # 計算需要的週數（每天5場，每週20場）
+        weeks_needed =math.ceil(total_matches/20)  # 向上取整
+        print(weeks_needed)
+        # 加上額外的兩週緩衝時間
+        total_weeks = weeks_needed + 2
+        flash(f"預計比賽週數：{weeks_needed}，預留兩週調整賽程")
+        
+        # 計算結束日期
+        end_date = start_date + timedelta(weeks=total_weeks)
+        
+        # 將結束日期調整到最近的週五
+        days_to_friday = (4 - end_date.weekday()) % 7  # 4 代表週五
+        end_date = end_date + timedelta(days=days_to_friday)
+        
         # 計算每個隊伍擔任裁判的次數
         def get_referee_counts(teams):
             referee_counts = {}
@@ -147,19 +164,29 @@ def generate_schedule():
             current_date = start_date
             while current_date <= end_date:
                 if current_date.weekday() in {0, 1, 3, 4}:  # 週一、二、四、五
-                    for hour in range(19, 24):
+                    for hour in range(19, 24):  # 19:00 到 23:00
                         match_time = datetime(
                             current_date.year,
                             current_date.month,
                             current_date.day,
-                            hour
+                            hour,
+                            0,   # 分鐘設為 0
+                            0    # 秒數設為 0
                         )
                         available_times.append(match_time)
                 current_date += timedelta(days=1)
             return available_times
 
+        # 檢查隊伍在特定日期是否已有比賽
+        def is_team_busy_on_date(team_id, date, schedule):
+            for match in schedule:
+                if (match.match_time.date() == date and 
+                    (match.team1_id == team_id or match.team2_id == team_id or match.referee_id == team_id)):
+                    return True
+            return False
+
         # 為每個分組生成循環賽賽程
-        def generate_group_schedule(teams, other_group_teams, used_times):
+        def generate_group_schedule(teams, other_group_teams, used_times, existing_schedule):
             schedule = []
             # 獲取另一組隊伍的裁判次數
             referee_counts = get_referee_counts(other_group_teams)
@@ -169,14 +196,19 @@ def generate_schedule():
             # 過濾掉已使用的時間
             available_times = [t for t in all_available_times if t not in used_times]
             
-            required_matches = len(list(combinations(teams, 2)))
-            if len(available_times) < required_matches:
-                flash(f"❌ 可用的比賽時間不足")
-                return [], used_times
+            # 將所有可能的比賽組合打亂順序
+            match_combinations = list(combinations(teams, 2))
+            random.shuffle(match_combinations)
             
-            time_index = 0
+            # 按日期分組可用的時間
+            available_times_by_date = {}
+            for time in available_times:
+                date = time.date()
+                if date not in available_times_by_date:
+                    available_times_by_date[date] = []
+                available_times_by_date[date].append(time)
             
-            for team1, team2 in combinations(teams, 2):
+            for team1, team2 in match_combinations:
                 # 找出另一組中擔任裁判次數最少的隊伍
                 min_count = min(referee_counts.values())
                 available_referees = [team for team in other_group_teams 
@@ -202,15 +234,34 @@ def generate_schedule():
                 ).first()
 
                 if not existing_match:
+                    # 尋找合適的比賽時間
+                    match_time = None
+                    # 遍歷每個日期
+                    for date, times in available_times_by_date.items():
+                        # 檢查這個日期是否所有隊伍都可用
+                        if (not is_team_busy_on_date(team1_obj.id, date, schedule) and
+                            not is_team_busy_on_date(team2_obj.id, date, schedule) and
+                            not is_team_busy_on_date(referee_obj.id, date, schedule) and
+                            not is_team_busy_on_date(team1_obj.id, date, existing_schedule) and
+                            not is_team_busy_on_date(team2_obj.id, date, existing_schedule) and
+                            not is_team_busy_on_date(referee_obj.id, date, existing_schedule)):
+                            # 從這個日期的可用時間中選擇一個
+                            if times:
+                                match_time = times.pop(0)
+                                break
+                    
+                    if match_time is None:
+                        flash(f"❌ 無法為 {team1} vs {team2} 安排比賽時間，請增加比賽期間")
+                        return [], used_times
+
                     # 建立比賽
                     match = Match(
                         team1_id=team1_obj.id,
                         team2_id=team2_obj.id,
                         referee_id=referee_obj.id,
-                        match_time=available_times[time_index]
+                        match_time=match_time
                     )
-                    used_times.add(available_times[time_index])
-                    time_index += 1
+                    used_times.add(match_time)
                     schedule.append(match)
 
             return schedule, used_times
@@ -223,11 +274,11 @@ def generate_schedule():
         used_times = set()
 
         # 生成 A 組和 B 組的賽程
-        schedule_a, used_times = generate_group_schedule(group_a, group_b_teams, used_times)
+        schedule_a, used_times = generate_group_schedule(group_a, group_b_teams, used_times, [])
         if not schedule_a:
             return redirect(url_for('main.draw_teams', team_type=team_type))
             
-        schedule_b, used_times = generate_group_schedule(group_b, group_a_teams, used_times)
+        schedule_b, used_times = generate_group_schedule(group_b, group_a_teams, used_times, schedule_a)
         if not schedule_b:
             return redirect(url_for('main.draw_teams', team_type=team_type))
 
@@ -245,7 +296,7 @@ def generate_schedule():
             Match.team1.has(team_type=team_type)
         ).order_by(Match.match_time).all()
 
-        flash("✅ 賽程已成功生成")
+        flash(f"✅ 賽程已成功生成，比賽期間：{start_date.strftime('%Y/%m/%d')} 至 {end_date.strftime('%Y/%m/%d')}")
         return render_template('draw_teams.html', 
                              team_type=team_type, 
                              group_a=group_a_teams, 

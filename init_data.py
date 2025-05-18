@@ -24,12 +24,13 @@ db.session.commit()
 # ✅ 男排 + 女排資料
 departments = [
     "中文系", "外文系", "資工系", "經濟系", "法律系", "勞工系",
-    "會計系", "心理系", "教育系", "社工系", "財政系", "政治系"
+    "會計系", "心理系", "教育系", "社工系", "財政系", "政治系",
+    "歐一系","哩ㄎㄧ系", "歌仔系", "我的雞雞好系", "X系", "Y系"
 ]
-grades = [1, 2, 3, 4, 1, 2, 3, 1, 2, 3, 4, 1]
+grades = [1, 2, 3, 4, 1, 2, 3, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3]
 
 # ✅ 男排隊伍 captainA ~ captainL
-for i in range(12):
+for i in range(18):
     dept = departments[i]
     username = f"captain{chr(65 + i)}"           # A~L
     name = f"金 {chr(65 + i)}"
@@ -57,7 +58,7 @@ for i in range(12):
     db.session.commit()
 
 # ✅ 女排隊伍 captainM ~ captainX
-for i in range(12):
+for i in range(18):
     dept = departments[i]
     username = f"captain{chr(77 + i)}"           # M~X
     name = f"林 {chr(77 + i)}"
