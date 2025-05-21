@@ -21,18 +21,18 @@ admin = User(
 db.session.add(admin)
 db.session.commit()
 
-# ✅ 男排 + 女排資料
+# 男/女排資料
 departments = [
     "中文系", "外文系", "資工系", "經濟系", "法律系", "勞工系",
     "會計系", "心理系", "教育系", "社工系", "財政系", "政治系",
-    "歐一系","哩ㄎㄧ系", "歌仔系", "我的雞雞好系", "X系", "Y系"
+    "歐一系", "哩ㄎㄧ系", "歌仔系", "我的雞雞好系", "X系", "Y系"
 ]
 grades = [1, 2, 3, 4, 1, 2, 3, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3]
 
-# ✅ 男排隊伍 captainA ~ captainL
-for i in range(18):
+# 男排隊伍 m_captainA ~ m_captainR 並新增一位隊員
+for i in range(len(departments)):
     dept = departments[i]
-    username = f"captain{chr(65 + i)}"           # A~L
+    username = f"m_captain{chr(65 + i)}"   # m_captainA ~ m_captainR
     name = f"金 {chr(65 + i)}"
     plain_pw = "0000"
     grade = grades[i]
@@ -57,12 +57,28 @@ for i in range(18):
     team.captain_id = captain.id
     db.session.commit()
 
-# ✅ 女排隊伍 captainM ~ captainX
-for i in range(18):
+    # 新增一位男隊員
+    member_username = f"m_member{chr(65 + i)}"
+    member_name = f"王 {chr(65 + i)}"
+    member = User(
+        username=member_username,
+        name=member_name,
+        password=bcrypt.generate_password_hash(plain_pw).decode('utf-8'),
+        role="member",
+        team_id=team.id,
+        department=dept,
+        grade=grade,
+        gender="男"
+    )
+    db.session.add(member)
+    db.session.commit()
+
+# 女排隊伍 f_captainA ~ f_captainR 並新增一位隊員
+for i in range(len(departments)):
     dept = departments[i]
-    username = f"captain{chr(77 + i)}"           # M~X
-    name = f"林 {chr(77 + i)}"
-    plain_pw = "0"
+    username = f"f_captain{chr(65 + i)}"   # f_captainA ~ f_captainR
+    name = f"林 {chr(65 + i)}"
+    plain_pw = "0000"
     grade = grades[i]
 
     team = Team(name=dept, captain_id=None, team_type="女排")
@@ -85,5 +101,21 @@ for i in range(18):
     team.captain_id = captain.id
     db.session.commit()
 
-print("✅ 已建立 12 男排 + 12 女排 隊伍與隊長（帳號 captainA~X, 密碼 0)")
-print("✅ 已建立管理員帳號:admin / admin")
+    # 新增一位女隊員
+    member_username = f"f_member{chr(65 + i)}"
+    member_name = f"陳 {chr(65 + i)}"
+    member = User(
+        username=member_username,
+        name=member_name,
+        password=bcrypt.generate_password_hash(plain_pw).decode('utf-8'),
+        role="member",
+        team_id=team.id,
+        department=dept,
+        grade=grade,
+        gender="女"
+    )
+    db.session.add(member)
+    db.session.commit()
+
+print(f"✅ 已建立 {len(departments)} 男排 + {len(departments)} 女排 隊伍與隊長(帳號 m_captainA~R / f_captainA~R, 密碼 0000), 每隊也新增一位隊員(帳號 m_memberA~R / f_memberA~R, 密碼 0000)")
+print("✅ 已建立管理員帳號: admin / admin")

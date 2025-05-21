@@ -11,6 +11,19 @@
         }
         window.onload = toggleTeamInputs;
     </script>
+    <style>
+        .flash-message {
+            margin-top: 20px;
+        }
+        .text-red {
+            color: red;
+            font-weight: bold;
+        }
+        .text-green {
+            color: green;
+            font-weight: bold;
+        }
+    </style>
 </head>
 
 <body>
@@ -187,6 +200,23 @@
     <hr>
 
     <h2>使用者清單</h2>
+    <form method="get" style="margin-bottom: 16px;">
+        <label>隊伍類型：</label>
+        <select name="team_type" onchange="this.form.submit()">
+            <option value="">全部</option>
+            <option value="男排" {% if request.args.get('team_type') == '男排' %}selected{% endif %}>男排</option>
+            <option value="女排" {% if request.args.get('team_type') == '女排' %}selected{% endif %}>女排</option>
+        </select>
+    
+        <label style="margin-left: 10px;">所屬隊伍：</label>
+        <select name="team_id" onchange="this.form.submit()">
+            <option value="">全部</option>
+            {% for t in teams if not request.args.get('team_type') or t.team_type == request.args.get('team_type') %}
+            <option value="{{ t.id }}" {% if request.args.get('team_id') == t.id|string %}selected{% endif %}>{{ t.name }}({{ t.team_type }})</option>
+            {% endfor %}
+        </select>
+        <noscript><button type="submit">篩選</button></noscript>
+    </form>
     <table border="1">
         <tr>
             <th>ID</th>

@@ -1,12 +1,14 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_user, logout_user, login_required, current_user
 from .models import User, Team, Match, JoinRequest
+from .config import departments
 from . import db, bcrypt
 from itertools import combinations
 import random
 from datetime import datetime, timedelta
 from . import route_ManageUser
 import math
+
 
 main = Blueprint('main', __name__)
 
@@ -25,20 +27,36 @@ def login():
             return redirect(url_for('main.dashboard'))
     return render_template('login.html')
 
-# 註冊（預設為隊長）
+# 註冊
 @main.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        if User.query.filter_by(username=request.form['username']).first():
+        username = request.form['username']
+        password = request.form['password']
+        name = request.form.get('name')
+        department = request.form.get('department')
+        grade = request.form.get('grade')
+        gender = request.form.get('gender')
+
+        if User.query.filter_by(username=username).first():
             flash('帳號已存在，請使用其他名稱')
             return redirect(url_for('main.register'))
-            
-        hashed_pw = bcrypt.generate_password_hash(request.form['password']).decode('utf-8')
-        user = User(username=request.form['username'], password=hashed_pw, name = request.form.get('name'), role='visitor')
+        
+        hashed_pw = bcrypt.generate_password_hash(password).decode('utf-8')
+        user = User(
+            username=username,
+            password=hashed_pw,
+            name=name,
+            role='visitor',
+            department=department,
+            grade=int(grade),
+            gender=gender
+        )
         db.session.add(user)
         db.session.commit()
+        flash("註冊成功！請登入")
         return redirect(url_for('main.login'))
-    return render_template('register.html')
+    return render_template('register.html', departments=departments)
 
 # 顯示抽籤頁面
 @main.route('/admin/draw_teams', methods=['GET'])
@@ -537,4 +555,4 @@ def dashboard():
 @login_required
 def logout():
     logout_user()
-    return redirect(url_for('main.login'))
+    return redirect(url_for('main.login')) 
