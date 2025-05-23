@@ -22,29 +22,6 @@
         姓名: <input name="name" required><br>
         帳號: <input name="username" required><br>
         密碼: <input type="password" name="password" required><br>
-
-        科系:
-        <select name="department" required>
-            {% for dep in departments %}
-                <option value="{{ dep }}">{{ dep }}</option>
-            {% endfor %}
-        </select>
-        <br>
-
-        年級:
-        <select name="grade" required>
-            {% for i in range(1, 7) %}
-                <option value="{{ i }}">{{ i }} 年級</option>
-            {% endfor %}
-        </select>
-        <br>
-
-        性別:
-        <select name="gender" required>
-            <option value="男">男</option>
-            <option value="女">女</option>
-        </select>
-        <br>
         <button type="submit">註冊</button>
     </form>
     <a href="/login">已有帳號？登入</a>

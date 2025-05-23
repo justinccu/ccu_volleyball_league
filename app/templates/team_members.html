@@ -1,39 +1,99 @@
 <!DOCTYPE html>
 <html>
-<head>
+  <head>
+    <meta charset="UTF-8" />
     <title>我的隊伍成員</title>
-    <style>
-        .flash-message {
-            margin-top: 20px;
-        }
-        .text-red {
-            color: red;
-            font-weight: bold;
-        }
-        .text-green {
-            color: green;
-            font-weight: bold;
-        }
-    </style>
-</head>
-<body>
-    <h2>🏐 我的隊伍：{{ team.name }}({{ team.team_type }} | {{ team.team_cycle or '未分組' }})</h2>
-
-    <h3>👑 隊長</h3>
-    {% if team.captain %}
-        <p>{{ team.captain.name }}({{ team.captain.username }})</p>
-    {% else %}
-        <p>尚未指定隊長</p>
-    {% endif %}
-
-    <h3>👥 隊員列表</h3>
-        {% for member in team.members %}
-            {% if member.id != team.captain_id %}
-                <p>{{ member.name }}({{ member.department }} / {{ member.grade }}年級 / {{ member.gender }})</p>
-            {% endif %}
-        {% endfor %}
-
-    <br>
-    <a href="{{ url_for('main.dashboard') }}">🔙 回主頁</a>
-</body>
+    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="" />
+    <link
+      rel="stylesheet"
+      as="style"
+      onload="this.rel='stylesheet'"
+      href="https://fonts.googleapis.com/css2?display=swap&amp;family=Inter%3Awght%40400%3B500%3B700%3B900&amp;family=Noto+Sans%3Awght%40400%3B500%3B700%3B900"
+    />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  </head>
+  <body>
+    <div class="relative flex min-h-screen flex-col bg-slate-50 group/design-root overflow-x-hidden" style='font-family: Inter, "Noto Sans", sans-serif;'>
+      <div class="layout-container flex h-full grow flex-col">
+        <header class="flex items-center justify-between border-b border-b-[#e7eef3] px-10 py-3">
+          <div class="flex items-center gap-4 text-[#0e161b]">
+            <div class="size-4">
+              <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 6H42L36 24L42 42H6L12 24L6 6Z" fill="currentColor"></path></svg>
+            </div>
+            <h2 class="text-lg font-bold tracking-[-0.015em]">中正排球聯盟</h2>
+          </div>
+          <div class="flex flex-1 justify-end gap-8">
+            <div class="flex items-center gap-9">
+              <a class="text-sm font-medium" href="{{ url_for('main.dashboard') }}">Dashboard</a>
+              <a class="text-sm font-medium" href="{{ url_for('main.edit_profile') }}">Profile</a> 
+            </div>
+            <div
+              class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10"
+              style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAWEu2WFDje4C0osycPVAhWbhcIgYuzeJOLdjd9LksOpyiDqNjybUdwzbGDBFoE-3TDn8_6yAS2-5zf4_c2ZSt6L1YOoiUxdLWmkHn7uVXPAJPA_fvKxYjPTSNfF0ZcdSjIAauWIDJfsTSSv9e7lnujUm6RszNTuxS1SAv4ImNNgmAxqU0uDff-Y_9Iwtk70lDYp4c0yNEYrCQGXDsFKAq4LrUB78-rvSSmdEKTZIYvsGVhoDUAzdAOW0BEbpNk_aK8M1HZFbaaXqL8");'
+            ></div>
+          </div>
+        </header>
+        <div class="px-40 flex flex-1 justify-center py-5">
+          <div class="layout-content-container flex flex-col max-w-[960px] flex-1">
+            <!-- 導航 -->
+            <div class="flex flex-wrap gap-2 p-4">
+              <a class="text-[#4e7a97] text-base font-medium leading-normal" href="{{ url_for('main.dashboard') }}">Dashboard</a>
+              <span class="text-[#4e7a97] text-base font-medium leading-normal">/</span>
+              <span class="text-[#0e161b] text-base font-medium leading-normal">我的隊伍</span>
+            </div>
+            <!-- 隊伍資訊 -->
+            <div class="flex flex-wrap justify-between gap-3 p-4">
+              <div class="flex min-w-72 flex-col gap-3">
+                <p class="text-[#0e161b] text-[32px] font-bold leading-tight">{{ team.name }}</p>
+                <p class="text-[#4e7a97] text-sm font-normal leading-normal">{{ team.team_type }} | 循環 {{ team.team_cycle or '未分組' }}</p>
+              </div>
+            </div>
+            <!-- 隊長資訊 -->
+            <h2 class="text-[#0e161b] text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">隊長</h2>
+            <div class="flex items-center gap-4 bg-slate-50 px-4 min-h-[72px] py-2">
+              {% if team.captain %}
+                <div
+                  class="bg-center bg-no-repeat aspect-square bg-cover rounded-full h-14 w-fit"
+                  style='background-image: url("https://ui-avatars.com/api/?name={{ team.captain.name|urlencode }}&background=4e7a97&color=fff&bold=true");'
+                ></div>
+                <div class="flex flex-col justify-center">
+                  <p class="text-[#0e161b] text-base font-medium leading-normal line-clamp-1">{{ team.captain.name }} <span class="text-xs text-slate-400">({{ team.captain.username }})</span></p>
+                  <p class="text-[#4e7a97] text-sm font-normal leading-normal line-clamp-2">科系：{{ team.captain.department }} / 年級：{{ team.captain.grade }} / 性別：{{ team.captain.gender }}</p>
+                </div>
+              {% else %}
+                <div class="flex flex-col justify-center">
+                  <p>尚未指定隊長</p>
+                </div>
+              {% endif %}
+            </div>
+            <!-- 隊員資訊 -->
+            <h2 class="text-[#0e161b] text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">隊員</h2>
+            {% for member in team.members %}
+              {% if member.id != team.captain_id %}
+                <div class="flex items-center gap-4 bg-slate-50 px-4 min-h-[72px] py-2 my-2">
+                  <div
+                    class="bg-center bg-no-repeat aspect-square bg-cover rounded-full h-14 w-fit"
+                    style='background-image: url("https://ui-avatars.com/api/?name={{ member.name|urlencode }}&background=0e161b&color=fff&bold=true");'
+                  ></div>
+                  <div class="flex flex-col justify-center">
+                    <p class="text-[#0e161b] text-base font-medium leading-normal line-clamp-1">{{ member.name }} <span class="text-xs text-slate-400">({{ member.username }})</span></p>
+                    <p class="text-[#4e7a97] text-sm font-normal leading-normal line-clamp-2">科系：{{ member.department }} / 年級：{{ member.grade }} / 性別：{{ member.gender }}</p>
+                  </div>
+                </div>
+              {% endif %}
+            {% endfor %}
+            <div class="flex px-4 py-3 justify-start">
+              <a href="{{ url_for('main.dashboard') }}">
+                <button
+                  class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-[#e7eef3] text-[#0e161b] text-sm font-bold leading-normal tracking-[0.015em]"
+                >
+                  <span class="truncate">回主頁</span>
+                </button>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
 </html>

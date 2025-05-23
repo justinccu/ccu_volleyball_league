@@ -17,38 +17,38 @@
     </style>
 </head>
 <body>
-    <h1>🏐 排球聯賽系統</h1>
+    <h1>排球聯賽系統</h1>
 
     <h2>歡迎, {{ current_user.name }}!</h2>
     <p>這裡將顯示你的比賽與帳號管理功能</p>
 
     {% if current_user.role == 'admin' %}
-        <h3>⚙️ 管理員操作面板</h3>
+        <h3>管理員操作面板</h3>
         <ul>
-            <li><a href="/admin/users">👥 使用者管理</a></li>
-            <li><a href="/admin/draw_teams">🎲 分組抽籤</a></li>
-            <li><a href="/team/list">🏐 隊伍成員查詢</a></li>
+            <li><a href="/admin/users">使用者管理</a></li>
+            <li><a href="/admin/draw_teams">分組抽籤</a></li>
+            <li><a href="/team/list">隊伍成員查詢</a></li>
         </ul>
     {% endif %}
 
     {% if current_user.role in ['captain', 'member'] %}
-        <h3>📅 我的比賽</h3>
+        <h3>我的比賽</h3>
         <a href="/my/matches"><button>查看我的比賽</button></a>
 
-        <h3>👨‍👩‍👧‍👦 我的隊伍成員</h3>
+        <h3>我的隊伍</h3>
         <a href="/my/team_members"><button>查看成員列表</button></a>
     {% endif %}
 
     {% if current_user.role == 'captain' %}
-        <h3>📝 入隊申請審核</h3>
+        <h3>入隊申請審核</h3>
         <a href="/captain/requests"><button>查看待審核申請</button></a>
 
-        <h3>🎯 裁判登錄比賽結果</h3>
+        <h3>裁判登錄比賽結果</h3>
         <a href="/referee/matches"><button>我要登錄成績</button></a>
     {% endif %}
 
     {% if current_user.role == 'visitor' %}
-        <h3>📨 加入隊伍</h3>
+        <h3>加入隊伍</h3>
         <a href="/join/request"><button>申請加入隊伍</button></a>
     {% endif %}
 

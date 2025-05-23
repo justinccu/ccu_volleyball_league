@@ -1,74 +1,122 @@
 <!DOCTYPE html>
-<html>
-<head>
-    <title>隊伍成員一覽</title>
-    <script>
-        function filterTeams() {
-            const type = document.getElementById('team_type').value;
-            const cycle = document.getElementById('team_cycle').value;
-            const teamBlocks = document.getElementsByClassName('team-block');
-
-            for (const block of teamBlocks) {
-                const blockType = block.getAttribute('data-type');
-                const blockCycle = block.getAttribute('data-cycle');
-
-                const show = (type === '全部' || blockType === type) &&
-                             (cycle === '全部' || blockCycle === cycle);
-                block.style.display = show ? 'block' : 'none';
-            }
-        }
-    </script>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Team Members List | Uni Teams</title>
+    <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64," />
+    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?display=swap&family=Inter:wght@400;500;700;900&family=Noto+Sans:wght@400;500;700;900" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <style>
-        .flash-message {
-            margin-top: 20px;
-        }
-        .text-red {
-            color: red;
-            font-weight: bold;
-        }
-        .text-green {
-            color: green;
-            font-weight: bold;
-        }
+      @container(max-width:120px){th:nth-child(1),td:nth-child(1){display:none;}}
+      @container(max-width:240px){th:nth-child(2),td:nth-child(2){display:none;}}
+      @container(max-width:360px){th:nth-child(3),td:nth-child(3){display:none;}}
+      @container(max-width:480px){th:nth-child(4),td:nth-child(4){display:none;}}
+      @container(max-width:600px){th:nth-child(5),td:nth-child(5){display:none;}}
     </style>
-</head>
-<body>
-    <h2>🏐 隊伍成員查詢</h2>
+  </head>
+  <body>
+    <div class="min-h-screen bg-gray-50 font-['Inter','Noto Sans',sans-serif]">
+      <div class="flex flex-col h-full min-h-screen">
+        <!-- Header -->
+        <header class="flex items-center justify-between border-b border-[#eaeef1] px-10 py-3 bg-white">
+            <div class="flex items-center gap-4">
+              <div class="size-4">
+                <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M44 4H30.6666V17.3334H17.3334V30.6666H4V44H44V4Z" fill="currentColor"></path></svg>
+              </div>
+              <h2 class="text-lg font-bold text-[#101518] tracking-[-0.015em]">中正排球聯盟</h2>
+            </div>
+            <div class="flex flex-1 justify-end gap-8">
+              <nav class="flex items-center gap-9">
+                <a class="text-[#101518] text-sm font-medium" href="{{ url_for('main.dashboard') }}">Dashboard</a>
+                <a class="text-[#101518] text-sm font-medium" href="{{ url_for('main.edit_profile') }}">Profile</a>
+              </nav>
+              <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10"
+                   style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDt2IBTIdCHam2F8XQEDrt_7eYY2hPMdKkYDilkB7cOMMGaoVDUtqfkgNImtBkTfueXva8doqU8PZT0puBWecaKF0jjDJfIj4MoLjDcgeCN1JjowkQoLT2DgEGahMD-C5OCVo8In0Iauj4aXK-qd2nYxqBaUTOW1h-aDYS6Y5Wo-3yV2Uw23pzgvK4IwYbWqYojbg77RYVqG3TW4uOKXfzdULQgar8h5KQY9Td_ntOiPe6gxvXpea3D4uOTTgsOnI0LlLuuLAv8rTLM");'></div>
+            </div>
+          </header>
 
-    <label>隊伍類型：</label>
-    <select id="team_type" onchange="filterTeams()">
-        <option value="全部">全部</option>
-        <option value="男排">男排</option>
-        <option value="女排">女排</option>
-    </select>
+        <main class="px-10 flex flex-1 justify-center py-5">
+          <div class="flex flex-col max-w-[960px] w-full">
+            <div class="flex flex-wrap justify-between gap-3 p-4">
+              <p class="text-[#101518] text-[32px] font-bold leading-tight min-w-72">隊伍成員查詢</p>
+            </div>
 
-    <label>小組：</label>
-    <select id="team_cycle" onchange="filterTeams()">
-        <option value="全部">全部</option>
-        <option value="A">A</option>
-        <option value="B">B</option>
-    </select>
+            <!-- 下拉選單篩選 -->
+            <div class="flex gap-6 items-center p-4">
+              <label class="text-[#101518] font-medium">隊伍類型：</label>
+              <select id="team_type" class="rounded border border-[#d4dde2] p-2" onchange="filterTeams()">
+                <option value="全部">全部</option>
+                <option value="男排">男排</option>
+                <option value="女排">女排</option>
+              </select>
+              <label class="ml-8 text-[#101518] font-medium">小組：</label>
+              <select id="team_cycle" class="rounded border border-[#d4dde2] p-2" onchange="filterTeams()">
+                <option value="全部">全部</option>
+                <option value="A">A</option>
+                <option value="B">B</option>
+              </select>
+            </div>
 
-    <hr>
-    {% for team in teams %}
-    <div class="team-block" data-type="{{ team.team_type }}" data-cycle="{{ team.team_cycle }}" style="margin-bottom: 20px;">
-        <h3>{{ team.name }} ({{ team.team_type }} - {{ team.team_cycle or '未分組' }})</h3>
-        <ul>
-            {% if team.captain %}
-            <li><strong>隊長</strong>: {{ team.captain.name }} ({{ team.captain.username }})</li>
-            {% endif %}
-            {% for member in team.members %}
-                {% if member.id != team.captain_id %}
-                <li><strong>隊員</strong>: {{ member.name }} ({{ member.username }})</li>
-                {% endif %}
-            {% endfor %}
-        </ul>
+            <!-- Table -->
+            <div class="px-4 py-3 @container">
+              <div class="overflow-x-auto rounded-xl border border-[#d4dde2] bg-gray-50">
+                <table class="w-full" id="teamsTable">
+                  <thead>
+                    <tr class="bg-gray-50">
+                      <th class="px-4 py-3 text-left text-[#101518] text-sm font-medium">Team Name</th>
+                      <th class="px-4 py-3 text-left text-[#101518] text-sm font-medium">Type</th>
+                      <th class="px-4 py-3 text-left text-[#101518] text-sm font-medium">Cycle</th>
+                      <th class="px-4 py-3 text-left text-[#101518] text-sm font-medium">Captain</th>
+                      <th class="px-4 py-3 text-left text-[#101518] text-sm font-medium">Members</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for team in teams %}
+                    <tr class="border-t border-[#d4dde2]"
+                        data-team-type="{{ team.team_type or '' }}"
+                        data-team-cycle="{{ team.team_cycle or '' }}">
+                      <td class="h-[72px] px-4 py-2 text-[#101518] text-sm font-normal">{{ team.name }}</td>
+                      <td class="h-[72px] px-4 py-2 text-[#5c778a] text-sm font-normal">{{ team.team_type or '' }}</td>
+                      <td class="h-[72px] px-4 py-2 text-[#5c778a] text-sm font-normal">{{ team.team_cycle or '' }}</td>
+                      <td class="h-[72px] px-4 py-2 text-[#5c778a] text-sm font-normal">
+                        {{ team.captain.name if team.captain else '' }}
+                      </td>
+                      <td class="h-[72px] px-4 py-2 text-[#5c778a] text-sm font-normal">
+                        {% if team.members %}
+                          {{ team.members | selectattr('id', 'ne', team.captain_id) | map(attribute='name') | join(', ') }}
+                        {% else %}
+                          -
+                        {% endif %}
+                      </td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
     </div>
-    {% endfor %}
 
     <script>
-        document.addEventListener('DOMContentLoaded', filterTeams);
+      function filterTeams() {
+        const type = document.getElementById('team_type').value;
+        const cycle = document.getElementById('team_cycle').value;
+        const rows = document.querySelectorAll('#teamsTable tbody tr');
+        rows.forEach(row => {
+          const rowType = row.getAttribute('data-team-type') || '';
+          const rowCycle = row.getAttribute('data-team-cycle') || '';
+          let typeMatch = (type === '全部' || rowType === type);
+          let cycleMatch = (cycle === '全部' || rowCycle === cycle);
+          if (typeMatch && cycleMatch) {
+            row.style.display = '';
+          } else {
+            row.style.display = 'none';
+          }
+        });
+      }
     </script>
-    <br><a href="/dashboard">回主頁</a>
-</body>
+  </body>
 </html>

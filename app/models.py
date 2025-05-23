@@ -25,6 +25,8 @@ class User(db.Model, UserMixin):
     grade = db.Column(db.Integer, nullable=True)     
     # 男女排  
     gender = db.Column(db.String(10), nullable=True)
+    # 學號  
+    student_id = db.Column(db.String(20), nullable=True)
 
 class Team(db.Model):
     __tablename__ = 'team'

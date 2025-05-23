@@ -3,11 +3,9 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager
 
-
 db = SQLAlchemy()
 bcrypt = Bcrypt()
 login_manager = LoginManager()
-login_manager.login_view = 'main.login'
 
 def create_app():
     app = Flask(__name__)
@@ -17,10 +15,9 @@ def create_app():
     db.init_app(app)
     bcrypt.init_app(app)
     login_manager.init_app(app)
+    login_manager.login_view = 'main.login'    # 建議放這裡
 
     from .routes import main
-    from .route_ManageUser import route_ManageUser
     app.register_blueprint(main)
-    app.register_blueprint(route_ManageUser)
 
     return app
