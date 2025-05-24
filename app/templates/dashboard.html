@@ -62,18 +62,16 @@
         .close-button:hover {
             color: black;
         }
-        .modal-header {
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 10px;
-            margin-bottom: 15px;
+        .edit-button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
         }
-        .modal-body {
-            margin-bottom: 15px;
-        }
-        .modal-footer {
-            border-top: 1px solid #ddd;
-            padding-top: 10px;
-            text-align: right;
+        .edit-button:hover {
+            background-color: #45a049;
         }
         /* Filter styles */
         .filter-section {
@@ -164,6 +162,9 @@
                 <th>隊伍1</th>
                 <th>隊伍2</th>
                 <th>狀態</th>
+                {% if current_user.role == 'admin' %}
+                <th>操作</th>
+                {% endif %}
             </tr>
         </thead>
         <tbody id="scheduleTableBody">
@@ -181,6 +182,65 @@
             <div class="modal-body" id="modalContent">
                 <!-- 動態填充內容 -->
             </div>
+        </div>
+    </div>
+
+    <!-- 編輯比賽資訊的 Modal -->
+    <div id="editMatchModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeEditModal()">&times;</span>
+            <h3>編輯比賽資訊</h3>
+            <form id="editMatchForm">
+                <input type="hidden" id="editMatchId">
+                <div>
+                    <label>比賽期間：</label>
+                    <span id="matchPeriod"></span>
+                    <br>
+                    <small style="color: #666;">（含兩週調整緩衝期）</small>
+                </div>
+                <div>
+                    <label>比賽時間：</label>
+                    <select id="editMatchTime">
+                        <option value="">請選擇時間</option>
+                    </select>
+                </div>
+                <div>
+                    <label>第一局比分：</label>
+                    <input type="number" id="editTeam1Set1"> : 
+                    <input type="number" id="editTeam2Set1">
+                </div>
+                <div>
+                    <label>第二局比分：</label>
+                    <input type="number" id="editTeam1Set2"> : 
+                    <input type="number" id="editTeam2Set2">
+                </div>
+                <div>
+                    <label>第三局比分：</label>
+                    <input type="number" id="editTeam1Set3"> : 
+                    <input type="number" id="editTeam2Set3">
+                </div>
+                <div>
+                    <label>燈錢(主隊)：</label>
+                    <input type="number" id="editTeam1LampFee">
+                </div>
+                <div>
+                    <label>燈錢(客隊)：</label>
+                    <input type="number" id="editTeam2LampFee">
+                </div>
+                <div>
+                    <label>狀態：</label>
+                    <select id="editMatchStatus" required>
+                        <option value="pending">尚未開始</option>
+                        <option value="waiting_confirm">等待確認</option>
+                        <option value="confirmed">已確認</option>
+                        <option value="rejected">已拒絕</option>
+                    </select>
+                </div>
+                <div style="margin-top: 20px; text-align: right;">
+                    <button type="button" onclick="closeEditModal()" style="margin-right: 10px; padding: 5px 15px; background-color: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">取消</button>
+                    <button type="submit" class="edit-button">保存修改</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -301,6 +361,11 @@
                     <td>${match.home_team}</td>
                     <td>${match.away_team}</td>
                     <td>${match.status}</td>
+                    {% if current_user.role == 'admin' %}
+                    <td>
+                        <button class="edit-button" onclick="openEditModal(${match.id})">編輯</button>
+                    </td>
+                    {% endif %}
                 `;
                 
                 row.addEventListener('click', () => showMatchDetails(match));
@@ -332,6 +397,149 @@
             `;
             modal.style.display = 'block';
         }
+
+        // 關閉編輯 Modal
+        function closeEditModal() {
+            document.getElementById('editMatchModal').style.display = 'none';
+            // 重置表單
+            document.getElementById('editMatchForm').reset();
+        }
+
+        // 打開編輯 Modal
+        function openEditModal(matchId) {
+            // 先獲取可用時間
+            fetch(`/api/available_times/${matchId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // 顯示比賽期間
+                        const periodElement = document.getElementById('matchPeriod');
+                        periodElement.innerHTML = `${data.period.start} 至 ${data.period.end}<br>` +
+                            `<small style="color: #666;">（原始結束日期：${data.period.original_end}）</small>`;
+
+                        const timeSelect = document.getElementById('editMatchTime');
+                        timeSelect.innerHTML = '<option value="">請選擇時間</option>';
+                        
+                        data.available_times.forEach(time => {
+                            const option = document.createElement('option');
+                            option.value = time;
+                            option.textContent = new Date(time).toLocaleString('zh-TW', {
+                                year: 'numeric',
+                                month: '2-digit',
+                                day: '2-digit',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                hour12: false
+                            });
+                            timeSelect.appendChild(option);
+                        });
+                    } else {
+                        alert('無法獲取可用時間：' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching available times:', error);
+                    alert('獲取可用時間時發生錯誤');
+                });
+
+            // 獲取比賽資訊
+            fetch(`/api/match/${matchId}`)
+                .then(response => response.json())
+                .then(match => {
+                    document.getElementById('editMatchId').value = match.id;
+                    if (match.time) {
+                        const timeSelect = document.getElementById('editMatchTime');
+                        const currentTime = match.time.replace(' ', 'T');
+                        // 如果當前時間不在選項中，添加它
+                        if (!Array.from(timeSelect.options).some(option => option.value === currentTime)) {
+                            const option = document.createElement('option');
+                            option.value = currentTime;
+                            option.textContent = new Date(currentTime).toLocaleString('zh-TW', {
+                                year: 'numeric',
+                                month: '2-digit',
+                                day: '2-digit',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                hour12: false
+                            });
+                            timeSelect.appendChild(option);
+                        }
+                        timeSelect.value = currentTime;
+                    }
+                    document.getElementById('editTeam1Set1').value = match.team1_set1 || '';
+                    document.getElementById('editTeam2Set1').value = match.team2_set1 || '';
+                    document.getElementById('editTeam1Set2').value = match.team1_set2 || '';
+                    document.getElementById('editTeam2Set2').value = match.team2_set2 || '';
+                    document.getElementById('editTeam1Set3').value = match.team1_set3 || '';
+                    document.getElementById('editTeam2Set3').value = match.team2_set3 || '';
+                    document.getElementById('editTeam1LampFee').value = match.team1_lamp_fee || '';
+                    document.getElementById('editTeam2LampFee').value = match.team2_lamp_fee || '';
+                    document.getElementById('editMatchStatus').value = match.status;
+                    
+                    document.getElementById('editMatchModal').style.display = 'block';
+                })
+                .catch(error => {
+                    console.error('Error fetching match details:', error);
+                    alert('獲取比賽資訊時發生錯誤');
+                });
+        }
+
+        // 提交編輯表單
+        document.getElementById('editMatchForm').onsubmit = function(e) {
+            e.preventDefault();
+            
+            const matchId = document.getElementById('editMatchId').value;
+            const formData = {};
+
+            // 只添加有值的欄位
+            const matchTime = document.getElementById('editMatchTime').value;
+            if (matchTime) formData.match_time = matchTime;
+
+            const team1Set1 = document.getElementById('editTeam1Set1').value;
+            if (team1Set1) formData.team1_set1 = team1Set1;
+
+            const team2Set1 = document.getElementById('editTeam2Set1').value;
+            if (team2Set1) formData.team2_set1 = team2Set1;
+
+            const team1Set2 = document.getElementById('editTeam1Set2').value;
+            if (team1Set2) formData.team1_set2 = team1Set2;
+
+            const team2Set2 = document.getElementById('editTeam2Set2').value;
+            if (team2Set2) formData.team2_set2 = team2Set2;
+
+            const team1Set3 = document.getElementById('editTeam1Set3').value;
+            if (team1Set3) formData.team1_set3 = team1Set3;
+
+            const team2Set3 = document.getElementById('editTeam2Set3').value;
+            if (team2Set3) formData.team2_set3 = team2Set3;
+
+            const team1LampFee = document.getElementById('editTeam1LampFee').value;
+            if (team1LampFee) formData.team1_lamp_fee = team1LampFee;
+
+            const team2LampFee = document.getElementById('editTeam2LampFee').value;
+            if (team2LampFee) formData.team2_lamp_fee = team2LampFee;
+
+            const status = document.getElementById('editMatchStatus').value;
+            if (status) formData.status = status;
+
+            fetch(`/api/match/${matchId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('修改成功！');
+                    document.getElementById('editMatchModal').style.display = 'none';
+                    updateSchedule();
+                } else {
+                    alert('修改失敗：' + data.message);
+                }
+            });
+        };
 
         // 初始載入賽程表
         updateSchedule();

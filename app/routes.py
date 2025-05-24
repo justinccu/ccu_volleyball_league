@@ -566,15 +566,19 @@ def get_matches():
     matches_data = []
     
     for match in matches:
-        # 計算比賽狀態
-        status = match.status
-        if match.team1_set1 is not None:  # 如果有比分，表示比賽已結束
-            status = '已結束'
+        # 狀態判斷
+        if match.status == 'rejected':
+            status = '已拒絕'
+        elif match.team1_set1 is not None:
+            if match.team1_confirmed and match.team2_confirmed:
+                status = '已結束'
+            else:
+                status = '確認中'
         elif match.match_time and match.match_time < datetime.now():
             status = '進行中'
         else:
             status = '尚未開始'
-            
+        
         # 格式化比分
         score = None
         if match.team1_set1 is not None:
@@ -596,4 +600,169 @@ def get_matches():
         }
         matches_data.append(match_data)
     
-    return jsonify(matches_data) 
+    return jsonify(matches_data)
+
+@main.route('/api/match/<int:match_id>', methods=['GET'])
+@login_required
+def get_match(match_id):
+    if current_user.role != 'admin':
+        return jsonify({'success': False, 'message': '無權限操作'}), 403
+
+    match = Match.query.get_or_404(match_id)
+    return jsonify({
+        'id': match.id,
+        'time': match.match_time.strftime('%Y-%m-%d %H:%M') if match.match_time else None,
+        'team1_set1': match.team1_set1,
+        'team2_set1': match.team2_set1,
+        'team1_set2': match.team1_set2,
+        'team2_set2': match.team2_set2,
+        'team1_set3': match.team1_set3,
+        'team2_set3': match.team2_set3,
+        'team1_lamp_fee': match.team1_lamp_fee,
+        'team2_lamp_fee': match.team2_lamp_fee,
+        'status': match.status
+    })
+
+@main.route('/api/match/<int:match_id>', methods=['PUT'])
+@login_required
+def update_match(match_id):
+    if current_user.role != 'admin':
+        return jsonify({'success': False, 'message': '無權限操作'}), 403
+
+    match = Match.query.get_or_404(match_id)
+    data = request.get_json()
+
+    try:
+        # 更新比賽時間
+        if 'match_time' in data and data['match_time']:
+            match.match_time = datetime.strptime(data['match_time'], '%Y-%m-%dT%H:%M')
+
+        # 更新比分
+        if 'team1_set1' in data and data['team1_set1'] != '':
+            match.team1_set1 = int(data['team1_set1'])
+        if 'team2_set1' in data and data['team2_set1'] != '':
+            match.team2_set1 = int(data['team2_set1'])
+        if 'team1_set2' in data and data['team1_set2'] != '':
+            match.team1_set2 = int(data['team1_set2'])
+        if 'team2_set2' in data and data['team2_set2'] != '':
+            match.team2_set2 = int(data['team2_set2'])
+        if 'team1_set3' in data and data['team1_set3'] != '':
+            match.team1_set3 = int(data['team1_set3'])
+        if 'team2_set3' in data and data['team2_set3'] != '':
+            match.team2_set3 = int(data['team2_set3'])
+
+        # 更新燈錢
+        if 'team1_lamp_fee' in data and data['team1_lamp_fee'] != '':
+            match.team1_lamp_fee = int(data['team1_lamp_fee'])
+        if 'team2_lamp_fee' in data and data['team2_lamp_fee'] != '':
+            match.team2_lamp_fee = int(data['team2_lamp_fee'])
+
+        # 更新狀態
+        if 'status' in data and data['status']:
+            match.status = data['status']
+
+        # 計算勝負（只有比分有變動時才計算）
+        if any(k in data for k in ['team1_set1', 'team2_set1', 'team1_set2', 'team2_set2', 'team1_set3', 'team2_set3']):
+            team1_win = 0
+            team2_win = 0
+            if match.team1_set1 is not None and match.team2_set1 is not None:
+                if match.team1_set1 > match.team2_set1:
+                    team1_win += 1
+                else:
+                    team2_win += 1
+            if match.team1_set2 is not None and match.team2_set2 is not None:
+                if match.team1_set2 > match.team2_set2:
+                    team1_win += 1
+                else:
+                    team2_win += 1
+            if team1_win == 1 and team2_win == 1:
+                if match.team1_set3 is not None and match.team2_set3 is not None:
+                    if match.team1_set3 > match.team2_set3:
+                        team1_win += 1
+                    else:
+                        team2_win += 1
+            if team1_win > team2_win:
+                match.winner_id = match.team1_id
+                match.loser_id = match.team2_id
+            elif team2_win > team1_win:
+                match.winner_id = match.team2_id
+                match.loser_id = match.team1_id
+            else:
+                match.winner_id = None
+                match.loser_id = None
+
+        db.session.commit()
+        return jsonify({'success': True})
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 400
+
+@main.route('/api/available_times/<int:match_id>', methods=['GET'])
+@login_required
+def get_available_times(match_id):
+    if current_user.role != 'admin':
+        return jsonify({'success': False, 'message': '無權限操作'}), 403
+
+    current_match = Match.query.get_or_404(match_id)
+    
+    # 獲取所有相同類型的比賽
+    all_matches = Match.query.filter(
+        Match.team_type == current_match.team_type
+    ).order_by(Match.match_time).all()
+    
+    if not all_matches:
+        return jsonify({'success': False, 'message': '找不到相關比賽資訊'}), 404
+
+    # 找出最早和最晚的比賽時間
+    start_date = None
+    end_date = None
+    for match in all_matches:
+        if match.match_time:
+            if start_date is None or match.match_time < start_date:
+                start_date = match.match_time
+            if end_date is None or match.match_time > end_date:
+                end_date = match.match_time
+
+    if not start_date or not end_date:
+        return jsonify({'success': False, 'message': '無法確定比賽期間'}), 404
+
+    # 在結束日期加上兩週的緩衝時間
+    end_date = end_date + timedelta(weeks=2)
+    
+    # 將結束日期調整到最近的週五
+    days_to_friday = (4 - end_date.weekday()) % 7  # 4 代表週五
+    end_date = end_date + timedelta(days=days_to_friday)
+
+    # 獲取已使用的時間
+    used_times = set()
+    for match in all_matches:
+        if match.match_time and match.id != match_id:  # 排除當前比賽
+            used_times.add(match.match_time)
+    
+    # 生成可用的時間（週一、二、四、五的19:00-23:00）
+    available_times = []
+    current_date = start_date
+    while current_date <= end_date:
+        if current_date.weekday() in {0, 1, 3, 4}:  # 週一、二、四、五
+            for hour in range(19, 24):  # 19:00 到 23:00
+                match_time = datetime(
+                    current_date.year,
+                    current_date.month,
+                    current_date.day,
+                    hour,
+                    0
+                )
+                if match_time not in used_times:
+                    available_times.append(match_time.strftime('%Y-%m-%dT%H:%M'))
+        current_date += timedelta(days=1)
+    
+    return jsonify({
+        'success': True,
+        'available_times': available_times,
+        'period': {
+            'start': start_date.strftime('%Y-%m-%d'),
+            'end': end_date.strftime('%Y-%m-%d'),
+            'original_end': (end_date - timedelta(weeks=2)).strftime('%Y-%m-%d')
+        }
+    }) 
