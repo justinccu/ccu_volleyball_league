@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
 from .models import User, Team, Match, JoinRequest
 from .config import departments
@@ -96,7 +96,7 @@ def draw_teams():
 
         # 清除所有比賽記錄
         try:
-            Match.query.delete()
+            Match.query.filter_by(team_type=team_type).delete()
             db.session.commit()
         except Exception as e:
             db.session.rollback()
@@ -141,7 +141,8 @@ def generate_schedule():
         return redirect(url_for('main.draw_teams', team_type=team_type))
 
     try:
-        Match.query.delete()
+        # 只刪除特定 team_type 的比賽記錄
+        Match.query.filter_by(team_type=team_type).delete()
         db.session.commit()
         
         # 驗證日期格式
@@ -155,7 +156,7 @@ def generate_schedule():
         total_matches = calculate_required_matches(group_a) + calculate_required_matches(group_b)
         
         # 計算需要的週數（每天5場，每週20場）
-        weeks_needed =math.ceil(total_matches/20)  # 向上取整
+        weeks_needed = math.ceil(total_matches/20)  # 向上取整
         print(weeks_needed)
         # 加上額外的兩週緩衝時間
         total_weeks = weeks_needed + 2
@@ -277,7 +278,8 @@ def generate_schedule():
                         team1_id=team1_obj.id,
                         team2_id=team2_obj.id,
                         referee_id=referee_obj.id,
-                        match_time=match_time
+                        match_time=match_time,
+                        team_type=team_type 
                     )
                     used_times.add(match_time)
                     schedule.append(match)
@@ -311,7 +313,7 @@ def generate_schedule():
 
         # 查詢所有新生成的比賽
         matches = Match.query.filter(
-            Match.team1.has(team_type=team_type)
+            Match.team_type == team_type
         ).order_by(Match.match_time).all()
 
         flash(f"✅ 賽程已成功生成，比賽期間：{start_date.strftime('%Y/%m/%d')} 至 {end_date.strftime('%Y/%m/%d')}")
@@ -555,4 +557,43 @@ def dashboard():
 @login_required
 def logout():
     logout_user()
-    return redirect(url_for('main.login')) 
+    return redirect(url_for('main.login'))
+
+@main.route('/api/matches')
+@login_required
+def get_matches():
+    matches = Match.query.order_by(Match.match_time).all()
+    matches_data = []
+    
+    for match in matches:
+        # 計算比賽狀態
+        status = match.status
+        if match.team1_set1 is not None:  # 如果有比分，表示比賽已結束
+            status = '已結束'
+        elif match.match_time and match.match_time < datetime.now():
+            status = '進行中'
+        else:
+            status = '尚未開始'
+            
+        # 格式化比分
+        score = None
+        if match.team1_set1 is not None:
+            score = f"{match.team1_set1}-{match.team2_set1}"
+            if match.team1_set2 is not None:
+                score += f", {match.team1_set2}-{match.team2_set2}"
+            if match.team1_set3 is not None:
+                score += f", {match.team1_set3}-{match.team2_set3}"
+        
+        match_data = {
+            'id': match.id,
+            'time': match.match_time.strftime('%Y-%m-%d %H:%M') if match.match_time else '待定',
+            'home_team': match.team1.name,
+            'away_team': match.team2.name,
+            'status': status,
+            'score': score,
+            'referee': match.referee.name if match.referee else '待定',
+            'team_type': '男排' if match.team_type == '男排' else '女排'
+        }
+        matches_data.append(match_data)
+    
+    return jsonify(matches_data) 

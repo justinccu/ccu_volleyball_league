@@ -14,6 +14,106 @@
             color: green;
             font-weight: bold;
         }
+        .schedule-table {
+            width: 50%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .schedule-table th, .schedule-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        .schedule-table th {
+            background-color: #f5f5f5;
+        }
+        .schedule-table tr:hover {
+            background-color: #f9f9f9;
+            cursor: pointer;
+        }
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 8px;
+            position: relative;
+        }
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close-button:hover {
+            color: black;
+        }
+        .modal-header {
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        .modal-body {
+            margin-bottom: 15px;
+        }
+        .modal-footer {
+            border-top: 1px solid #ddd;
+            padding-top: 10px;
+            text-align: right;
+        }
+        /* Filter styles */
+        .filter-section {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        .filter-group {
+            margin-bottom: 10px;
+        }
+        .filter-group label {
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        .filter-group select {
+            padding: 5px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        .filter-buttons {
+            margin-top: 10px;
+        }
+        .filter-buttons button {
+            padding: 5px 15px;
+            margin-right: 10px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            background-color: #fff;
+            cursor: pointer;
+        }
+        .filter-buttons button:hover {
+            background-color: #f0f0f0;
+        }
+        .filter-buttons button.active {
+            background-color: #007bff;
+            color: white;
+            border-color: #0056b3;
+        }
     </style>
 </head>
 <body>
@@ -21,6 +121,68 @@
 
     <h2>歡迎, {{ current_user.name }}!</h2>
     <p>這裡將顯示你的比賽與帳號管理功能</p>
+
+    <!-- 賽程表部分 -->
+    <h3>📅 賽程表</h3>
+    
+    <!-- 篩選控制項 -->
+    <div class="filter-section">
+        <div class="filter-group">
+            <label>比賽類型：</label>
+            <select id="teamTypeFilter">
+                <option value="all">全部</option>
+                <option value="男排">男排</option>
+                <option value="女排">女排</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>隊伍：</label>
+            <select id="teamFilter">
+                <option value="all">全部隊伍</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>狀態：</label>
+            <select id="statusFilter">
+                <option value="all">全部狀態</option>
+                <option value="尚未開始">尚未開始</option>
+                <option value="進行中">進行中</option>
+                <option value="已結束">已結束</option>
+            </select>
+        </div>
+        <div class="filter-buttons">
+            <button onclick="applyFilters()">套用篩選</button>
+            <button onclick="resetFilters()">重置篩選</button>
+        </div>
+    </div>
+
+    <table class="schedule-table">
+        <thead>
+            <tr>
+                <th>比賽時間</th>
+                <th>類型</th>
+                <th>隊伍1</th>
+                <th>隊伍2</th>
+                <th>狀態</th>
+            </tr>
+        </thead>
+        <tbody id="scheduleTableBody">
+            <!-- 動態填充內容 -->
+        </tbody>
+    </table>
+
+    <!-- Modal -->
+    <div id="matchModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <div class="modal-header">
+                <h3>比賽詳細資訊</h3>
+            </div>
+            <div class="modal-body" id="modalContent">
+                <!-- 動態填充內容 -->
+            </div>
+        </div>
+    </div>
 
     {% if current_user.role == 'admin' %}
         <h3>⚙️ 管理員操作面板</h3>
@@ -54,5 +216,128 @@
 
     <br><br>
     <a href="/logout">登出</a>
+
+    <script>
+        // 獲取 modal 元素
+        const modal = document.getElementById('matchModal');
+        const modalContent = document.getElementById('modalContent');
+        const closeButton = document.getElementsByClassName('close-button')[0];
+        let allMatches = []; // 存儲所有比賽數據
+
+        // 關閉 modal 的函數
+        function closeModal() {
+            modal.style.display = 'none';
+        }
+
+        // 點擊關閉按鈕時關閉 modal
+        closeButton.onclick = closeModal;
+
+        // 點擊 modal 外部時關閉 modal
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+
+        // 更新隊伍選項
+        function updateTeamOptions(matches) {
+            const teamFilter = document.getElementById('teamFilter');
+            const teams = new Set();
+            
+            matches.forEach(match => {
+                teams.add(match.home_team);
+                teams.add(match.away_team);
+            });
+            
+            // 清空現有選項（保留"全部隊伍"選項）
+            while (teamFilter.options.length > 1) {
+                teamFilter.remove(1);
+            }
+            
+            // 添加隊伍選項
+            Array.from(teams).sort().forEach(team => {
+                const option = document.createElement('option');
+                option.value = team;
+                option.textContent = team;
+                teamFilter.appendChild(option);
+            });
+        }
+
+        // 套用篩選
+        function applyFilters() {
+            const teamType = document.getElementById('teamTypeFilter').value;
+            const team = document.getElementById('teamFilter').value;
+            const status = document.getElementById('statusFilter').value;
+            
+            const filteredMatches = allMatches.filter(match => {
+                const matchTeamType = teamType === 'all' || match.team_type === teamType;
+                const matchTeam = team === 'all' || match.home_team === team || match.away_team === team;
+                const matchStatus = status === 'all' || match.status === status;
+                
+                return matchTeamType && matchTeam && matchStatus;
+            });
+            
+            displayMatches(filteredMatches);
+        }
+
+        // 重置篩選
+        function resetFilters() {
+            document.getElementById('teamTypeFilter').value = 'all';
+            document.getElementById('teamFilter').value = 'all';
+            document.getElementById('statusFilter').value = 'all';
+            displayMatches(allMatches);
+        }
+
+        // 顯示比賽列表
+        function displayMatches(matches) {
+            const tbody = document.getElementById('scheduleTableBody');
+            tbody.innerHTML = '';
+            
+            matches.forEach(match => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${match.time}</td>
+                    <td>${match.team_type}</td>
+                    <td>${match.home_team}</td>
+                    <td>${match.away_team}</td>
+                    <td>${match.status}</td>
+                `;
+                
+                row.addEventListener('click', () => showMatchDetails(match));
+                tbody.appendChild(row);
+            });
+        }
+
+        // 更新賽程表的函數
+        function updateSchedule() {
+            fetch('/api/matches')
+                .then(response => response.json())
+                .then(data => {
+                    allMatches = data; // 保存所有比賽數據
+                    updateTeamOptions(data); // 更新隊伍選項
+                    displayMatches(data); // 顯示所有比賽
+                })
+                .catch(error => console.error('Error fetching matches:', error));
+        }
+
+        // 顯示比賽詳細資訊的函數
+        function showMatchDetails(match) {
+            modalContent.innerHTML = `
+                <p><strong>比賽時間：</strong>${match.time}</p>
+                <p><strong>比賽類型：</strong>${match.team_type}</p>
+                <p><strong>隊伍1：</strong>${match.home_team}</p>
+                <p><strong>隊伍2：</strong>${match.away_team}</p>
+                <p><strong>比分：</strong>${match.score || '尚未開始'}</p>
+                <p><strong>裁判：</strong>${match.referee || '待定'}</p>
+            `;
+            modal.style.display = 'block';
+        }
+
+        // 初始載入賽程表
+        updateSchedule();
+
+        // 每30秒更新一次賽程表
+        setInterval(updateSchedule, 30000);
+    </script>
 </body>
 </html>
