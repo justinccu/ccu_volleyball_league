@@ -15,15 +15,24 @@
             font-weight: bold;
         }
     </style>
+    <!-- 引入 Google reCAPTCHA -->
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </head>
 <body>
     <h2>註冊新帳號</h2>
+
     <form method="POST">
-        姓名: <input name="name" required><br>
         帳號: <input name="username" required><br>
         密碼: <input type="password" name="password" required><br>
+
+        <!-- reCAPTCHA 驗證框 -->
+        <div class="g-recaptcha" data-sitekey="{{ config['RECAPTCHA_SITE_KEY'] }}"></div>
+        <br>
+
         <button type="submit">註冊</button>
     </form>
+
+    <br>
     <a href="/login">已有帳號？登入</a>
 </body>
 </html>

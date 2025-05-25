@@ -52,6 +52,9 @@ class Match(db.Model):
     team1_id = db.Column(db.Integer, db.ForeignKey('team.id'), nullable=False)
     team2_id = db.Column(db.Integer, db.ForeignKey('team.id'), nullable=False)
     referee_id = db.Column(db.Integer, db.ForeignKey('team.id'), nullable=False)
+    
+    # 比賽類型（男排/女排）
+    team_type = db.Column(db.String(10), nullable=False)
 
     # 時間與比賽結果
     match_time = db.Column(db.DateTime, nullable=True)

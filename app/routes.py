@@ -1,13 +1,13 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app
 from flask_login import login_user, logout_user, login_required, current_user
 from .models import User, Team, Match, JoinRequest
-from .config import departments
+from .config import departments, RECAPTCHA_SITE_KEY, RECAPTCHA_SECRET_KEY
 from . import db, bcrypt
 from itertools import combinations
 import random
 from datetime import datetime, timedelta
 import math
-
+import requests
 
 main = Blueprint('main', __name__)
 
@@ -30,26 +30,43 @@ def login():
 @main.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
+        # 取得驗證碼結果
+        recaptcha_response = request.form.get('g-recaptcha-response')
+        secret_key = current_app.config.get('RECAPTCHA_SECRET_KEY')
+
+        # 驗證 reCAPTCHA
+        verify_url = 'https://www.google.com/recaptcha/api/siteverify'
+        payload = {'secret': secret_key, 'response': recaptcha_response}
+        r = requests.post(verify_url, data=payload)
+        result = r.json()
+
+        if not result.get('success'):
+            flash('驗證碼失敗，請勾選「我不是機器人」')
+            return redirect(url_for('main.register'))
+
+        # 帳號建立流程
         username = request.form['username']
         password = request.form['password']
-        name = request.form.get('name')
+        name = request.form['name']  # 若有 name 欄位
 
         if User.query.filter_by(username=username).first():
             flash('帳號已存在，請使用其他名稱')
             return redirect(url_for('main.register'))
-        
+
         hashed_pw = bcrypt.generate_password_hash(password).decode('utf-8')
         user = User(
             username=username,
-            password=hashed_pw,
             name=name,
-            role='visitor',
+            password=hashed_pw,
+            role='visitor',  # 預設角色
         )
         db.session.add(user)
         db.session.commit()
+
         flash("註冊成功！請登入")
         return redirect(url_for('main.login'))
-    return render_template('register.html')
+
+    return render_template('register.html', config=current_app.config)
 
 # 顯示抽籤頁面
 @main.route('/admin/draw_teams', methods=['GET'])
@@ -89,7 +106,7 @@ def draw_teams():
 
         # 清除所有比賽記錄
         try:
-            Match.query.delete()
+            Match.query.filter_by(team_type=team_type).delete()
             db.session.commit()
         except Exception as e:
             db.session.rollback()
@@ -134,7 +151,7 @@ def generate_schedule():
         return redirect(url_for('main.draw_teams', team_type=team_type))
 
     try:
-        Match.query.delete()
+        Match.query.filter_by(team_type=team_type).delete()
         db.session.commit()
         
         # 驗證日期格式
@@ -148,7 +165,7 @@ def generate_schedule():
         total_matches = calculate_required_matches(group_a) + calculate_required_matches(group_b)
         
         # 計算需要的週數（每天5場，每週20場）
-        weeks_needed =math.ceil(total_matches/20)  # 向上取整
+        weeks_needed = math.ceil(total_matches/20)  # 向上取整
         print(weeks_needed)
         # 加上額外的兩週緩衝時間
         total_weeks = weeks_needed + 2
@@ -270,7 +287,8 @@ def generate_schedule():
                         team1_id=team1_obj.id,
                         team2_id=team2_obj.id,
                         referee_id=referee_obj.id,
-                        match_time=match_time
+                        match_time=match_time,
+                        team_type=team_type 
                     )
                     used_times.add(match_time)
                     schedule.append(match)
@@ -304,7 +322,7 @@ def generate_schedule():
 
         # 查詢所有新生成的比賽
         matches = Match.query.filter(
-            Match.team1.has(team_type=team_type)
+            Match.team_type == team_type
         ).order_by(Match.match_time).all()
 
         flash(f"✅ 賽程已成功生成，比賽期間：{start_date.strftime('%Y/%m/%d')} 至 {end_date.strftime('%Y/%m/%d')}")
@@ -724,20 +742,24 @@ def delete_user(user_id):
         flash(f"🗑️ 使用者 {user.username} 已刪除")
     return redirect(url_for('main.list_users'))
 
-@main.route('/admin/delete_team/<int:team_id>', methods=['POST'])
+@main.route('/admin/delete_team', methods=['POST'])
 @login_required
-def delete_team(team_id):
+def delete_team():
     if current_user.role != 'admin':
         return "❌ 無權限操作", 403
 
-    team = Team.query.get_or_404(team_id)
+    team_id = request.form.get('team_id')
+    if not team_id:
+        flash("❌ 請選擇要刪除的隊伍")
+        return redirect(url_for('main.list_users'))
+
+    team = Team.query.get_or_404(int(team_id))
 
     # 處理所有隊員與隊長：清除 team_id、變更角色為 visitor
     for member in team.members:
         member.team_id = None
         member.role = "visitor"
 
-    # 如果有指定隊長也處理（避免 null 狀況）
     if team.captain:
         team.captain.team_id = None
         team.captain.role = "visitor"
@@ -748,7 +770,7 @@ def delete_team(team_id):
     db.session.delete(team)
     db.session.commit()
 
-    flash(f"隊伍 {team.name} 已刪除，所有成員角色已改為 visitor")
+    flash(f"✅ 隊伍 {team.name} 已刪除，所有成員角色已改為 visitor")
     return redirect(url_for('main.list_users'))
 
 @main.route('/edit_profile', methods=['GET', 'POST'])
@@ -764,3 +786,211 @@ def edit_profile():
         db.session.commit()
         return redirect(url_for('main.dashboard'))
     return render_template('edit_profile.html', user=user, departments=departments)
+
+@main.route('/api/matches')
+@login_required
+def get_matches():
+    matches = Match.query.order_by(Match.match_time).all()
+    matches_data = []
+
+    for match in matches:
+        # 狀態判斷
+        if match.status == 'rejected':
+            status = '已拒絕'
+        elif match.team1_set1 is not None:
+            if match.team1_confirmed and match.team2_confirmed:
+                status = '已結束'
+            else:
+                status = '確認中'
+        elif match.match_time and match.match_time < datetime.now():
+            status = '進行中'
+        else:
+            status = '尚未開始'
+
+        # 格式化比分
+        score = None
+        if match.team1_set1 is not None:
+            score = f"{match.team1_set1}-{match.team2_set1}"
+            if match.team1_set2 is not None:
+                score += f", {match.team1_set2}-{match.team2_set2}"
+            if match.team1_set3 is not None:
+                score += f", {match.team1_set3}-{match.team2_set3}"
+
+        match_data = {
+            'id': match.id,
+            'time': match.match_time.strftime('%Y-%m-%d %H:%M') if match.match_time else '待定',
+            'home_team': match.team1.name,
+            'away_team': match.team2.name,
+            'status': status,
+            'score': score,
+            'referee': match.referee.name if match.referee else '待定',
+            'team_type': '男排' if match.team_type == '男排' else '女排'
+        }
+        matches_data.append(match_data)
+
+    return jsonify(matches_data)
+
+@main.route('/api/match/<int:match_id>', methods=['GET'])
+@login_required
+def get_match(match_id):
+    if current_user.role != 'admin':
+        return jsonify({'success': False, 'message': '無權限操作'}), 403
+
+    match = Match.query.get_or_404(match_id)
+    return jsonify({
+        'id': match.id,
+        'time': match.match_time.strftime('%Y-%m-%d %H:%M') if match.match_time else None,
+        'team1_set1': match.team1_set1,
+        'team2_set1': match.team2_set1,
+        'team1_set2': match.team1_set2,
+        'team2_set2': match.team2_set2,
+        'team1_set3': match.team1_set3,
+        'team2_set3': match.team2_set3,
+        'team1_lamp_fee': match.team1_lamp_fee,
+        'team2_lamp_fee': match.team2_lamp_fee,
+        'status': match.status
+    })
+
+@main.route('/api/match/<int:match_id>', methods=['PUT'])
+@login_required
+def update_match(match_id):
+    if current_user.role != 'admin':
+        return jsonify({'success': False, 'message': '無權限操作'}), 403
+
+    match = Match.query.get_or_404(match_id)
+    data = request.get_json()
+
+    try:
+        # 更新比賽時間
+        if 'match_time' in data and data['match_time']:
+            match.match_time = datetime.strptime(data['match_time'], '%Y-%m-%dT%H:%M')
+
+        # 更新比分
+        if 'team1_set1' in data and data['team1_set1'] != '':
+            match.team1_set1 = int(data['team1_set1'])
+        if 'team2_set1' in data and data['team2_set1'] != '':
+            match.team2_set1 = int(data['team2_set1'])
+        if 'team1_set2' in data and data['team1_set2'] != '':
+            match.team1_set2 = int(data['team1_set2'])
+        if 'team2_set2' in data and data['team2_set2'] != '':
+            match.team2_set2 = int(data['team2_set2'])
+        if 'team1_set3' in data and data['team1_set3'] != '':
+            match.team1_set3 = int(data['team1_set3'])
+        if 'team2_set3' in data and data['team2_set3'] != '':
+            match.team2_set3 = int(data['team2_set3'])
+
+        # 更新燈錢
+        if 'team1_lamp_fee' in data and data['team1_lamp_fee'] != '':
+            match.team1_lamp_fee = int(data['team1_lamp_fee'])
+        if 'team2_lamp_fee' in data and data['team2_lamp_fee'] != '':
+            match.team2_lamp_fee = int(data['team2_lamp_fee'])
+
+        # 更新狀態
+        if 'status' in data and data['status']:
+            match.status = data['status']
+
+        # 計算勝負（只有比分有變動時才計算）
+        if any(k in data for k in ['team1_set1', 'team2_set1', 'team1_set2', 'team2_set2', 'team1_set3', 'team2_set3']):
+            team1_win = 0
+            team2_win = 0
+            if match.team1_set1 is not None and match.team2_set1 is not None:
+                if match.team1_set1 > match.team2_set1:
+                    team1_win += 1
+                else:
+                    team2_win += 1
+            if match.team1_set2 is not None and match.team2_set2 is not None:
+                if match.team1_set2 > match.team2_set2:
+                    team1_win += 1
+                else:
+                    team2_win += 1
+            if team1_win == 1 and team2_win == 1:
+                if match.team1_set3 is not None and match.team2_set3 is not None:
+                    if match.team1_set3 > match.team2_set3:
+                        team1_win += 1
+                    else:
+                        team2_win += 1
+            if team1_win > team2_win:
+                match.winner_id = match.team1_id
+                match.loser_id = match.team2_id
+            elif team2_win > team1_win:
+                match.winner_id = match.team2_id
+                match.loser_id = match.team1_id
+            else:
+                match.winner_id = None
+                match.loser_id = None
+
+        db.session.commit()
+        return jsonify({'success': True})
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 400
+
+@main.route('/api/available_times/<int:match_id>', methods=['GET'])
+@login_required
+def get_available_times(match_id):
+    if current_user.role != 'admin':
+        return jsonify({'success': False, 'message': '無權限操作'}), 403
+
+    current_match = Match.query.get_or_404(match_id)
+
+    # 獲取所有相同類型的比賽
+    all_matches = Match.query.filter(
+        Match.team_type == current_match.team_type
+    ).order_by(Match.match_time).all()
+
+    if not all_matches:
+        return jsonify({'success': False, 'message': '找不到相關比賽資訊'}), 404
+
+    # 找出最早和最晚的比賽時間
+    start_date = None
+    end_date = None
+    for match in all_matches:
+        if match.match_time:
+            if start_date is None or match.match_time < start_date:
+                start_date = match.match_time
+            if end_date is None or match.match_time > end_date:
+                end_date = match.match_time
+
+    if not start_date or not end_date:
+        return jsonify({'success': False, 'message': '無法確定比賽期間'}), 404
+
+    # 在結束日期加上兩週的緩衝時間
+    end_date = end_date + timedelta(weeks=2)
+
+    # 將結束日期調整到最近的週五
+    days_to_friday = (4 - end_date.weekday()) % 7  # 4 代表週五
+    end_date = end_date + timedelta(days=days_to_friday)
+
+    # 獲取已使用的時間
+    used_times = set()
+    for match in all_matches:
+        if match.match_time and match.id != match_id:  # 排除當前比賽
+            used_times.add(match.match_time)
+
+    # 生成可用的時間（週一、二、四、五的19:00-23:00）
+    available_times = []
+    current_date = start_date
+    while current_date <= end_date:
+        if current_date.weekday() in {0, 1, 3, 4}:  # 週一、二、四、五
+            for hour in range(19, 24):  # 19:00 到 23:00
+                match_time = datetime(
+                    current_date.year,
+                    current_date.month,
+                    current_date.day,
+                    hour,
+                    0
+                )
+                if match_time not in used_times:
+                    available_times.append(match_time.strftime('%Y-%m-%dT%H:%M'))
+        current_date += timedelta(days=1)
+
+    return jsonify({
+        'success': True,
+        'available_times': available_times,
+        'period': {
+            'start': start_date.strftime('%Y-%m-%d'),
+            'end': end_date.strftime('%Y-%m-%d'),
+            'original_end': (end_date - timedelta(weeks=2)).strftime('%Y-%m-%d')
+        }
+    }) 

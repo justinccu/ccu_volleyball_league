@@ -8,3 +8,6 @@ departments = [
     "行銷與數位分析碩士班", "醫療資訊管理所", "法律系", "法律所", "財法系", "財法所", "成教系", "成教所",
     "教育所", "犯防系", "犯防所", "休閒教育所", "運競系", "課研所", "高齡教育所", "不分系"
 ]
+
+RECAPTCHA_SITE_KEY = "6Let8UcrAAAAAOuWX1VaELp6a3ut2knceTvBUlUp"
+RECAPTCHA_SECRET_KEY = "6Let8UcrAAAAAGplvCNm6MDQhhKA7K8L74Nb0iwy"
