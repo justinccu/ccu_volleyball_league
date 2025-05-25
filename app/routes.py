@@ -657,8 +657,9 @@ def list_users():
                 flash(f"已新增管理員 {username}")
 
     # 篩選處理 (GET 參數)
-    team_type = request.args.get('team_type')
-    team_id = request.args.get('team_id')
+    team_type = request.args.get('team_type', None)
+    team_id = request.args.get('team_id', None)
+    role = request.args.get("role", "")
 
     # 全部隊伍
     teams = Team.query.order_by(Team.team_type, Team.name).all()
@@ -670,6 +671,8 @@ def list_users():
         query = query.filter(User.team_id.in_(team_ids))
     if team_id:
         query = query.filter(User.team_id == int(team_id))
+    if role:
+        query = query.filter(User.role == role)
     users = query.all()
   
     return render_template(
@@ -678,8 +681,9 @@ def list_users():
         teams=teams,
         departments=departments,
         team_type=team_type,
-        team_id=team_id
-    )
+        team_id=team_id,
+        role=role
+        )
 
 
 @main.route('/admin/assign_user', methods=['POST'])

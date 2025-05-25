@@ -92,296 +92,373 @@
         <!-- Main Content -->
         <main class="flex-1 p-10 bg-gray-50">
             <!-- 新增使用者表單 -->
-            <div id="form-add-user" class="form-section">
-                <h2 class="text-[28px] font-bold text-[#101518] mb-6">新增使用者</h2>
-                <form method="post" action="{{ url_for('main.list_users') }}">
-                    <label class="font-medium text-[#101518]">姓名</label>
-                    <input type="text" name="name" required
-                        class="w-full h-14 px-4 border border-[#d4dde2] rounded-xl bg-white text-[#101518]"
-                        placeholder="請輸入姓名">
-
-                    <label class="font-medium text-[#101518]">帳號</label>
-                    <input type="text" name="username" required
-                        class="w-full h-14 px-4 border border-[#d4dde2] rounded-xl bg-white text-[#101518]"
-                        placeholder="請輸入帳號">
-
-                    <label class="font-medium text-[#101518]">密碼</label>
-                    <input type="password" name="password" required
-                        class="w-full h-14 px-4 border border-[#d4dde2] rounded-xl bg-white text-[#101518]"
-                        placeholder="請輸入密碼">
-
-                    <label class="font-medium text-[#101518]">角色</label>
-                    <select name="role" id="role" onchange="toggleTeamInputs()" required
-                        class="w-full h-14 px-4 border border-[#d4dde2] rounded-xl bg-white text-[#101518]">
-                        <option value="captain">captain</option>
-                        <option value="member">member</option>
-                        <option value="visitor">visitor</option>
-                        <option value="admin">admin</option>
-                    </select>
-
-                    <label class="font-medium text-[#101518]">系級</label>
-                    <select name="department" required
-                        class="w-full h-14 px-4 border border-[#d4dde2] rounded-xl bg-white text-[#101518]">
-                        {% for dep in departments %}
-                        <option value="{{ dep }}">{{ dep }}</option>
-                        {% endfor %}
-                    </select>
-
-                    <label class="font-medium text-[#101518]">年級</label>
-                    <select name="grade" required
-                        class="w-full h-14 px-4 border border-[#d4dde2] rounded-xl bg-white text-[#101518]">
-                        {% for i in range(1, 7) %}
-                        <option value="{{ i }}">{{ i }} 年級</option>
-                        {% endfor %}
-                    </select>
-
-                    <label class="font-medium text-[#101518]">性別</label>
-                    <select name="gender" required
-                        class="w-full h-14 px-4 border border-[#d4dde2] rounded-xl bg-white text-[#101518]">
-                        <option value="男">男</option>
-                        <option value="女">女</option>
-                    </select>
-
-                    <!-- 隊長輸入隊名與類別 -->
-                    <div id="new_team_section" class="space-y-4 mt-2">
-
-                        <!-- 隊伍名稱 -->
-                        <div>
-                            <label for="new_team_name" class="font-medium text-[#101518] block mb-1">新隊伍名稱</label>
-                            <input type="text" id="new_team_name" name="new_team_name"
+            <div id="form-add-user" class="form-section hidden">
+                <div class="layout-content-container flex flex-col w-full max-w-none px-10">
+                    <div class="flex flex-wrap justify-between gap-3 p-4">
+                        <p class="text-[#101518] tracking-light text-[32px] font-bold leading-tight min-w-72">新增使用者</p>
+                    </div>
+                    <div class="px-4 py-3">
+                        <form method="post" action="{{ url_for('main.list_users') }}">
+                            <label class="font-medium text-[#101518]">姓名</label>
+                            <input type="text" name="name" required
                                 class="w-full h-14 px-4 border border-[#d4dde2] rounded-xl bg-white text-[#101518]"
-                                placeholder="請輸入新隊伍名稱" />
-                        </div>
+                                placeholder="請輸入姓名">
 
-                        <!-- 隊伍類別 -->
-                        <div>
-                            <label for="team_type" class="font-medium text-[#101518] block mb-1">隊伍類別</label>
-                            <select id="team_type" name="team_type"
+                            <label class="font-medium text-[#101518]">帳號</label>
+                            <input type="text" name="username" required
+                                class="w-full h-14 px-4 border border-[#d4dde2] rounded-xl bg-white text-[#101518]"
+                                placeholder="請輸入帳號">
+
+                            <label class="font-medium text-[#101518]">密碼</label>
+                            <input type="password" name="password" required
+                                class="w-full h-14 px-4 border border-[#d4dde2] rounded-xl bg-white text-[#101518]"
+                                placeholder="請輸入密碼">
+
+                            <label class="font-medium text-[#101518]">角色</label>
+                            <select name="role" id="role" onchange="toggleTeamInputs()" required
                                 class="w-full h-14 px-4 border border-[#d4dde2] rounded-xl bg-white text-[#101518]">
-                                <option value="男排">男排</option>
-                                <option value="女排">女排</option>
+                                <option value="captain">captain</option>
+                                <option value="member">member</option>
+                                <option value="visitor">visitor</option>
+                                <option value="admin">admin</option>
                             </select>
-                        </div>
 
-                    </div>
+                            <label class="font-medium text-[#101518]">系級</label>
+                            <select name="department" required
+                                class="w-full h-14 px-4 border border-[#d4dde2] rounded-xl bg-white text-[#101518]">
+                                {% for dep in departments %}
+                                <option value="{{ dep }}">{{ dep }}</option>
+                                {% endfor %}
+                            </select>
 
-                    <!-- 隊員選擇隊伍 -->
-                    <div id="select_team_section" style="margin-top: 5px; display:none;">
-                        <label class="font-medium text-[#101518]">選擇加入隊伍</label>
-                        <select name="team_id"
-                            class="w-full h-14 px-4 border border-[#d4dde2] rounded-xl bg-white text-[#101518]">
-                            {% for team in teams %}
-                            <option value="{{ team.id }}">{{ team.name }}({{team.team_type}})</option>
-                            {% endfor %}
-                        </select>
-                    </div>
+                            <label class="font-medium text-[#101518]">年級</label>
+                            <select name="grade" required
+                                class="w-full h-14 px-4 border border-[#d4dde2] rounded-xl bg-white text-[#101518]">
+                                {% for i in range(1, 7) %}
+                                <option value="{{ i }}">{{ i }} 年級</option>
+                                {% endfor %}
+                            </select>
 
-                    <div class="flex justify-end mt-4">
-                        <button type="submit"
-                            class="bg-[#b2d1e5] text-[#101518] font-bold px-6 py-2 rounded-full">建立使用者</button>
+                            <label class="font-medium text-[#101518]">性別</label>
+                            <select name="gender" required
+                                class="w-full h-14 px-4 border border-[#d4dde2] rounded-xl bg-white text-[#101518]">
+                                <option value="男">男</option>
+                                <option value="女">女</option>
+                            </select>
+
+                            <!-- 隊長輸入隊名與類別 -->
+                            <div id="new_team_section" class="space-y-4 mt-2">
+
+                                <!-- 隊伍名稱 -->
+                                <div>
+                                    <label for="new_team_name"
+                                        class="font-medium text-[#101518] block mb-1">新隊伍名稱</label>
+                                    <input type="text" id="new_team_name" name="new_team_name"
+                                        class="w-full h-14 px-4 border border-[#d4dde2] rounded-xl bg-white text-[#101518]"
+                                        placeholder="請輸入新隊伍名稱" />
+                                </div>
+
+                                <!-- 隊伍類別 -->
+                                <div>
+                                    <label for="team_type" class="font-medium text-[#101518] block mb-1">隊伍類別</label>
+                                    <select id="team_type" name="team_type"
+                                        class="w-full h-14 px-4 border border-[#d4dde2] rounded-xl bg-white text-[#101518]">
+                                        <option value="男排">男排</option>
+                                        <option value="女排">女排</option>
+                                    </select>
+                                </div>
+
+                            </div>
+
+                            <!-- 隊員選擇隊伍 -->
+                            <div id="select_team_section" style="margin-top: 5px; display:none;">
+                                <label class="font-medium text-[#101518]">選擇加入隊伍</label>
+                                <select name="team_id"
+                                    class="w-full h-14 px-4 border border-[#d4dde2] rounded-xl bg-white text-[#101518]">
+                                    {% for team in teams %}
+                                    <option value="{{ team.id }}">{{ team.name }}({{team.team_type}})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="flex justify-end mt-4">
+                                <button type="submit"
+                                    class="bg-[#b2d1e5] text-[#101518] font-bold px-6 py-2 rounded-full">建立使用者</button>
+                            </div>
+                        </form>
+                        <script>
+                            function toggleTeamInputs() {
+                                var role = document.getElementById('role').value;
+                                var newTeamSection = document.getElementById('new_team_section');
+                                var selectTeamSection = document.getElementById('select_team_section');
+                                if (role === 'captain') {
+                                    newTeamSection.style.display = '';
+                                    selectTeamSection.style.display = 'none';
+                                } else if (role === 'member') {
+                                    newTeamSection.style.display = 'none';
+                                    selectTeamSection.style.display = '';
+                                } else {
+                                    newTeamSection.style.display = 'none';
+                                    selectTeamSection.style.display = 'none';
+                                }
+                            }
+                            // 頁面載入時初始化
+                            document.addEventListener('DOMContentLoaded', function () {
+                                toggleTeamInputs();
+                            });
+                        </script>
                     </div>
-                </form>
-                <script>
-                    function toggleTeamInputs() {
-                        var role = document.getElementById('role').value;
-                        var newTeamSection = document.getElementById('new_team_section');
-                        var selectTeamSection = document.getElementById('select_team_section');
-                        if (role === 'captain') {
-                            newTeamSection.style.display = '';
-                            selectTeamSection.style.display = 'none';
-                        } else if (role === 'member') {
-                            newTeamSection.style.display = 'none';
-                            selectTeamSection.style.display = '';
-                        } else {
-                            newTeamSection.style.display = 'none';
-                            selectTeamSection.style.display = 'none';
-                        }
-                    }
-                    // 頁面載入時初始化
-                    document.addEventListener('DOMContentLoaded', function () {
-                        toggleTeamInputs();
-                    });
-                </script>
+                </div>
             </div>
 
             <!-- 分發使用者表單 -->
             <div id="form-assign-user" class="form-section hidden">
-                <h2 class="text-[28px] font-bold text-[#101518] mb-6">分發使用者</h2>
-                <form method="POST" action="{{ url_for('main.assign_user') }}">
-                    <div class="mb-4">
-                        <label class="block font-medium text-[#101518] mb-1">選擇使用者</label>
-                        <select name="user_id" required
-                            class="w-full h-12 px-3 border border-[#d4dde2] rounded-xl bg-white text-[#101518]">
-                            {% for u in users %}
-                            {% if u.role != 'admin' and u.role != 'captain' %}
-                            <option value="{{ u.id }}">{{ u.name }} -- {{u.username}}({{ u.team.name if u.team else
-                                '無隊伍'
-                                }})</option>
-                            {% endif %}
-                            {% endfor %}
-                        </select>
+                <div class="layout-content-container flex flex-col w-full max-w-none px-10">
+                    <div class="flex flex-wrap justify-between gap-3 p-4">
+                        <p class="text-[#101518] tracking-light text-[32px] font-bold leading-tight min-w-72">分發使用者</p>
                     </div>
-                    <div class="mb-4">
-                        <label class="block font-medium text-[#101518] mb-1">分配至隊伍</label>
-                        <select name="team_id"
-                            class="w-full h-12 px-3 border border-[#d4dde2] rounded-xl bg-white text-[#101518]">
-                            {% for team in teams %}
-                            <option value="{{ team.id }}">{{ team.name }}({{team.team_type}})</option>
-                            {% endfor %}
-                            <option value="">無</option>
-                        </select>
+                    <div class="px-4 py-3">
+                        <form method="POST" action="{{ url_for('main.assign_user') }}">
+                            <div class="mb-4">
+                                <label class="block font-medium text-[#101518] mb-1">選擇使用者</label>
+                                <select name="user_id" required
+                                    class="w-full h-12 px-3 border border-[#d4dde2] rounded-xl bg-white text-[#101518]">
+                                    {% for u in users %}
+                                    {% if u.role != 'admin' and u.role != 'captain' %}
+                                    <option value="{{ u.id }}">{{ u.name }} -- {{u.username}}({{ u.team.name if u.team
+                                        else
+                                        '無隊伍'
+                                        }})</option>
+                                    {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block font-medium text-[#101518] mb-1">分配至隊伍</label>
+                                <select name="team_id"
+                                    class="w-full h-12 px-3 border border-[#d4dde2] rounded-xl bg-white text-[#101518]">
+                                    {% for team in teams %}
+                                    <option value="{{ team.id }}">{{ team.name }}({{team.team_type}})</option>
+                                    {% endfor %}
+                                    <option value="">無</option>
+                                </select>
+                            </div>
+                            <div class="flex justify-end">
+                                <button type="submit"
+                                    class="bg-[#b2d1e5] text-[#101518] font-bold px-6 py-2 rounded-full">分配</button>
+                            </div>
+                        </form>
                     </div>
-                    <div class="flex justify-end">
-                        <button type="submit"
-                            class="bg-[#b2d1e5] text-[#101518] font-bold px-6 py-2 rounded-full">分配</button>
-                    </div>
-                </form>
+                </div>
             </div>
 
             <!-- 刪除隊伍表單 -->
             <div id="form-delete-team" class="form-section hidden">
-                <h2 class="text-[28px] font-bold text-[#101518] mb-6">刪除隊伍</h2>
-                <form method="POST" action="{{ url_for('main.delete_team') }}" onsubmit="return confirmDeleteTeam()">
-                    <div class="mb-4">
-                        <label class="block font-medium text-[#101518] mb-1">隊伍類型</label>
-                        <select id="team-type"
-                            class="w-full h-12 px-3 border border-[#d4dde2] rounded-xl bg-white text-[#101518]"
-                            onchange="filterTeams()" required>
-                            <option value="男排" selected>男排</option>
-                            <option value="女排">女排</option>
-                        </select>
+                <div class="layout-content-container flex flex-col w-full max-w-none px-10">
+                    <div class="flex flex-wrap justify-between gap-3 p-4">
+                        <p class="text-[#101518] tracking-light text-[32px] font-bold leading-tight min-w-72">刪除隊伍</p>
                     </div>
-                    <div class="mb-4">
-                        <label class="block font-medium text-[#101518] mb-1">選擇要刪除的隊伍</label>
-                        <select name="team_id" id="team-select"
-                            class="w-full h-12 px-3 border border-[#d4dde2] rounded-xl bg-white text-[#101518]"
-                            required>
-                            <option value="">-- 請選擇隊伍 --</option>
-                            {% for team in teams %}
-                            <option value="{{ team.id }}" data-type="{{ team.team_type }}">{{ team.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="flex justify-end">
-                        <button type="submit"
-                            class="bg-red-500 text-white font-bold px-6 py-2 rounded-full">刪除整隊</button>
-                    </div>
-                </form>
+                    <div class="px-4 py-3">
+                        <form method="POST" action="{{ url_for('main.delete_team') }}"
+                            onsubmit="return confirmDeleteTeam()">
+                            <!-- 隊伍類型 -->
+                            <div class="mb-4">
+                                <label class="block font-medium text-[#101518] mb-1">隊伍類型</label>
+                                <select id="team-type"
+                                    class="w-full h-12 px-3 border border-[#d4dde2] rounded-xl bg-white text-[#101518]"
+                                    onchange="showTeamSelect()" required>
+                                    <option value="">-- 請選擇隊伍類型 --</option>
+                                    <option value="男排">男排</option>
+                                    <option value="女排">女排</option>
+                                </select>
+                            </div>
 
-                <script>
-                    function filterTeams() {
-                        var selectedType = document.getElementById('team-type').value;
-                        var teamSelect = document.getElementById('team-select');
-                        for (var i = 0; i < teamSelect.options.length; i++) {
-                            var opt = teamSelect.options[i];
-                            if (opt.value === "") {
-                                opt.style.display = '';
-                                continue;
+                            <!-- 隊伍選擇 -->
+                            <div class="mb-4" id="team-select-container" style="display:none;">
+                                <label class="block font-medium text-[#101518] mb-1">選擇要刪除的隊伍</label>
+                                <select name="team_id" id="team-select"
+                                    class="w-full h-12 px-3 border border-[#d4dde2] rounded-xl bg-white text-[#101518]"
+                                    required>
+                                    <option value="">-- 請選擇隊伍 --</option>
+                                    {% for team in teams %}
+                                    <option value="{{ team.id }}" data-type="{{ team.team_type }}">
+                                        {{ team.name }} ({{ team.team_type }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <!-- 提交按鈕 -->
+                            <div class="flex justify-end">
+                                <button type="submit" class="bg-red-500 text-white font-bold px-6 py-2 rounded-full">
+                                    刪除整隊
+                                </button>
+                            </div>
+                        </form>
+
+                        <script>
+                            function showTeamSelect() {
+                                const selectedType = document.getElementById('team-type').value;
+                                const teamSelectContainer = document.getElementById('team-select-container');
+                                const teamSelect = document.getElementById('team-select');
+                                let hasTeam = false;
+
+                                for (let i = 0; i < teamSelect.options.length; i++) {
+                                    const opt = teamSelect.options[i];
+                                    const type = opt.getAttribute('data-type');
+
+                                    if (opt.value === "") {
+                                        opt.style.display = ''; // 保留空選項
+                                        continue;
+                                    }
+
+                                    if (type === selectedType) {
+                                        opt.style.display = '';
+                                        hasTeam = true;
+                                    } else {
+                                        opt.style.display = 'none';
+                                    }
+                                }
+
+                                if (
+                                    teamSelect.selectedIndex > 0 &&
+                                    teamSelect.options[teamSelect.selectedIndex].style.display === 'none'
+                                ) {
+                                    teamSelect.selectedIndex = 0;
+                                }
+
+                                teamSelectContainer.style.display = hasTeam ? '' : 'none';
                             }
-                            if (opt.getAttribute('data-type') === selectedType) {
-                                opt.style.display = '';
-                            } else {
-                                opt.style.display = 'none';
-                            }
-                        }
-                        if (teamSelect.selectedIndex > 0 && teamSelect.options[teamSelect.selectedIndex].style.display === 'none') {
-                            teamSelect.selectedIndex = 0;
-                        }
-                    }
 
-                    function confirmDeleteTeam() {
-                        var teamSelect = document.getElementById('team-select');
-                        var selectedOption = teamSelect.options[teamSelect.selectedIndex];
-                        if (!teamSelect.value) {
-                            alert('請選擇要刪除的隊伍');
-                            return false;
-                        }
-                        return confirm('確定要刪除隊伍 "' + selectedOption.text + '" 嗎？此操作無法復原！');
-                    }
-
-                    document.addEventListener('DOMContentLoaded', function () {
-                        filterTeams();
-                    });
-                </script>
+                            document.addEventListener('DOMContentLoaded', function () {
+                                const teamType = document.getElementById('team-type');
+                                if (teamType) {
+                                    teamType.addEventListener('change', showTeamSelect);
+                                    if (teamType.value) {
+                                        showTeamSelect();  // ✅ 預設選到男排或女排才顯示
+                                    }
+                                }
+                            });
+                        </script>
+                    </div>
+                </div>
             </div>
 
-            <div id="form-user-list" class="form-section">
-                <h2 class="text-[28px] font-bold text-[#101518] mb-6">隊伍成員列表</h2>
-                <form method="get" style="margin-bottom: 16px;">
-                    <input type="hidden" name="tab" value="userlist">
+            <!-- 隊伍成員列表 -->
+            <div id="form-user-list" class="form-section hidden">
+                <div class="layout-content-container flex flex-col w-full max-w-none px-10">
+                    <div class="flex flex-wrap justify-between gap-3 p-4">
+                        <p class="text-[#101518] tracking-light text-[32px] font-bold leading-tight min-w-72">隊伍成員列表</p>
+                    </div>
+                    <form method="get" class="flex flex-col gap-4 px-4">
+                        <input type="hidden" name="tab" value="userlist">
+                        <div class="flex max-w-[960px] flex-wrap items-end gap-4">
+                            <!-- 隊伍類型 -->
+                            <label class="flex flex-col min-w-40 flex-1">
+                                <p class="text-[#101518] text-base font-medium leading-normal pb-2">隊伍類型</p>
+                                <select name="team_type" onchange="this.form.submit()"
+                                    class="form-input w-full rounded-xl border border-[#d4dde2] bg-gray-50 h-14 p-[15px] text-base text-[#101518]">
+                                    <option value="">全部</option>
+                                    <option value="男排" {% if team_type=='男排' %}selected{% endif %}>男排</option>
+                                    <option value="女排" {% if team_type=='女排' %}selected{% endif %}>女排</option>
+                                </select>
+                            </label>
 
-                    <label>隊伍類型</label>
-                    <select name="team_type" onchange="this.form.submit()">
-                        <option value="">全部</option>
-                        <option value="男排" {% if team_type=='男排' %}selected{% endif %}>男排</option>
-                        <option value="女排" {% if team_type=='女排' %}selected{% endif %}>女排</option>
-                    </select>
+                            <!-- 所屬隊伍 -->
+                            <label class="flex flex-col min-w-40 flex-1">
+                                <p class="text-[#101518] text-base font-medium leading-normal pb-2">所屬隊伍</p>
+                                <select name="team_id" onchange="this.form.submit()"
+                                    class="form-input w-full rounded-xl border border-[#d4dde2] bg-gray-50 h-14 p-[15px] text-base text-[#101518]">
+                                    <option value="">全部</option>
+                                    {% for t in teams if not team_type or t.team_type == team_type %}
+                                    <option value="{{ t.id }}" {% if team_id==t.id|string %}selected{% endif %}>{{
+                                        t.name }}({{ t.team_type }})</option>
+                                    {% endfor %}
+                                </select>
+                            </label>
 
-                    <label style="margin-left: 10px;">所屬隊伍</label>
-                    <select name="team_id" onchange="this.form.submit()">
-                        <option value="">全部</option>
-                        {% for t in teams if not team_type or t.team_type == team_type %}
-                        <option value="{{ t.id }}" {% if team_id==t.id|string %}selected{% endif %}>
-                            {{ t.name }}({{ t.team_type }})
-                        </option>
-                        {% endfor %}
-                    </select>
-                    <noscript><button type="submit">篩選</button></noscript>
-                </form>
-                <table border="1" class="w-full text-center">
-                    <tr>
-                        <th>姓名</th>
-                        <th>帳號</th>
-                        <th>角色</th>
-                        <th>所屬隊伍</th>
-                        <th>系級</th>
-                        <th>年級</th>
-                        <th>性別</th>
-                        <th>操作</th>
-                    </tr>
-                    {% for u in users %}
-                    <tr>
-                        <td>{{ u.name }}</td>
-                        <td>{{ u.username }}</td>
-                        <td>
-                            {% if u.role == 'admin' %}
-                            管理員
-                            {% elif u.role == 'captain' %}
-                            隊長
-                            {% elif u.role == 'member' %}
-                            隊員
-                            {% elif u.role == 'visitor' %}
-                            訪客
-                            {% else %}
-                            {{ u.role }}
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if u.team %}
-                            {{ u.team.name }}({{ u.team.team_type }})
-                            {% else %}
-                            無
-                            {% endif %}
-                        </td>
-                        <td>{{ u.department or '—' }}</td>
-                        <td>{{ u.grade or '—' }}</td>
-                        <td>{{ u.gender or '—' }}</td>
-                        <td>
-                            {% if u.role == 'admin' %}
-                            管理員
-                            {% elif u.role == 'captain' %}
-                            隊長
-                            {% else %}
-                            <form method="POST" action="{{ url_for('main.delete_user', user_id=u.id) }}"
-                                style="display:inline;">
-                                <button type="submit" onclick="return confirm('確定要刪除 {{ u.username }} 嗎？')">🗑
-                                    刪除</button>
-                            </form>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </table>
+                            <!-- 使用者角色 -->
+                            <label class="flex flex-col min-w-40 flex-1">
+                                <p class="text-[#101518] text-base font-medium leading-normal pb-2">使用者角色</p>
+                                <select name="role" onchange="this.form.submit()"
+                                    class="form-input w-full rounded-xl border border-[#d4dde2] bg-gray-50 h-14 p-[15px] text-base text-[#101518]">
+                                    <option value="" {% if not role %}selected{% endif %}>全部</option>
+                                    <option value="admin" {% if role=='admin' %}selected{% endif %}>管理員</option>
+                                    <option value="captain" {% if role=='captain' %}selected{% endif %}>隊長</option>
+                                    <option value="member" {% if role=='member' %}selected{% endif %}>隊員</option>
+                                    <option value="visitor" {% if role=='visitor' %}selected{% endif %}>訪客</option>
+                                </select>
+                            </label>
+                        </div>
+                    </form>
+
+                    <div class="px-4 py-3">
+                        <div class="overflow-x-auto rounded-xl border border-[#d4dde2] bg-gray-50">
+                            <table class="w-full min-w-[1280px]">
+                                <thead>
+                                    <tr
+                                        class="bg-gray-100 border-b border-[#d4dde2] text-[#101518] text-base font-semibold">
+                                        <th class="whitespace-nowrap px-8 py-4 text-left min-w-[140px]">姓名</th>
+                                        <th class="whitespace-nowrap px-8 py-4 text-left min-w-[160px]">帳號</th>
+                                        <th class="whitespace-nowrap px-8 py-4 text-left min-w-[160px]">學號</th>
+                                        <th class="whitespace-nowrap px-8 py-4 text-left min-w-[120px]">角色</th>
+                                        <th class="whitespace-nowrap px-8 py-4 text-left min-w-[220px]">所屬隊伍</th>
+                                        <th class="whitespace-nowrap px-8 py-4 text-left min-w-[220px]">系所</th>
+                                        <th class="whitespace-nowrap px-8 py-4 text-left min-w-[100px]">年級</th>
+                                        <th class="whitespace-nowrap px-8 py-4 text-left min-w-[100px]">性別</th>
+                                        <th class="whitespace-nowrap px-8 py-4 text-left min-w-[120px]">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% if users|length == 0 %}
+                                    <tr>
+                                        <td colspan="9" class="px-8 py-6 text-center text-[#5c778a] text-base">尚無成員</td>
+                                    </tr>
+                                    {% else %}
+                                    {% for u in users %}
+                                    <tr class="border-t border-[#d4dde2] hover:bg-gray-100 transition duration-150">
+                                        <td class="whitespace-nowrap px-8 py-4 text-base text-[#101518]">{{ u.name }}
+                                        </td>
+                                        <td class="whitespace-nowrap px-8 py-4 text-base text-[#5c778a]">{{ u.username
+                                            }}</td>
+                                        <td class="whitespace-nowrap px-8 py-4 text-base text-[#5c778a]">{{ u.student_id
+                                            }}</td>
+                                        <td class="whitespace-nowrap px-8 py-4 text-base text-[#5c778a]">
+                                            {% if u.role == 'admin' %}管理員
+                                            {% elif u.role == 'captain' %}隊長
+                                            {% elif u.role == 'member' %}隊員
+                                            {% elif u.role == 'visitor' %}訪客
+                                            {% else %}{{ u.role }}{% endif %}
+                                        </td>
+                                        <td class="whitespace-nowrap px-8 py-4 text-base text-[#5c778a]">
+                                            {% if u.team %}{{ u.team.name }}({{ u.team.team_type }}){% else %}無{% endif
+                                            %}
+                                        </td>
+                                        <td class="whitespace-nowrap px-8 py-4 text-base text-[#5c778a]">{{ u.department
+                                            or '—' }}</td>
+                                        <td class="whitespace-nowrap px-8 py-4 text-base text-[#5c778a]">{{ u.grade or
+                                            '—' }}</td>
+                                        <td class="whitespace-nowrap px-8 py-4 text-base text-[#5c778a]">{{ u.gender or
+                                            '—' }}</td>
+                                        <td class="whitespace-nowrap px-8 py-4 text-base text-[#5c778a]">
+                                            {% if u.role == 'admin' %}管理員
+                                            {% elif u.role == 'captain' %}隊長
+                                            {% else %}
+                                            <form method="POST" action="{{ url_for('main.delete_user', user_id=u.id) }}"
+                                                style="display:inline;">
+                                                <button class="text-red-600 hover:underline" type="submit"
+                                                    onclick="return confirm('確定要刪除 {{ u.username }} 嗎？')">刪除</button>
+                                            </form>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
         </main>
     </div>

@@ -1,0 +1,69 @@
+<html>
+  <head>
+    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="" />
+    <link
+      rel="stylesheet"
+      as="style"
+      onload="this.rel='stylesheet'"
+      href="https://fonts.googleapis.com/css2?display=swap&amp;family=Lexend%3Awght%40400%3B500%3B700%3B900&amp;family=Noto+Sans%3Awght%40400%3B500%3B700%3B900"
+    />
+
+    <title>刪除隊伍</title>
+    <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64," />
+
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  </head>
+  <body>
+    <div class="relative flex size-full min-h-screen flex-col bg-slate-50 group/design-root overflow-x-hidden" style='font-family: Lexend, "Noto Sans", sans-serif;'>
+      <div class="layout-container flex h-full grow flex-col">
+        <header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#e7edf3] px-10 py-3">
+          <div class="flex items-center gap-4 text-[#0e141b]">
+            <div class="size-4">
+              <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M44 4H30.6666V17.3334H17.3334V30.6666H4V44H44V4Z" fill="currentColor"></path></svg>
+            </div>
+            <h2 class="text-[#0e141b] text-lg font-bold leading-tight tracking-[-0.015em]">中正排球聯盟</h2>
+          </div>
+          <div class="flex flex-1 justify-end gap-8">
+            <div class="flex items-center gap-9">
+              <a class="text-[#0e141b] text-sm font-medium leading-normal" href="{{ url_for('main.dashboard') }}">Dashboard</a>
+              <a class="text-[#0e141b] text-sm font-medium leading-normal" href="{{ url_for('main.edit_profile') }}">Profile</a>
+            </div>
+            <div
+              class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10"
+              style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAthc_jV6nEDMrms6yHkk3quFqeJ3Bs0L5xoHTrkiTcMV0piXFhehZd3giDw0BZOpLMmhV6u9OApAr_wapNk3JZAgTzgkmOBBUNUg_NSTls1RxaohAumPo-86UsuZawRiw-UM2003FDebef93ZKiSGpY6x-kMSo9znzcGViIHcHo7AwJMMVH5jXahhc92GMivDY45LapPdDTVpLG1kardgy1Zgp5IOWk5eI1U--BVLzc-dlzWkUyZFyB0uqrufOA68F4FY4zKR2JCc");'
+            ></div>
+          </div>
+        </header>
+        <div class="px-40 flex flex-1 justify-center py-5">
+          <div class="layout-content-container flex flex-col w-[512px] max-w-[512px] py-5 max-w-[960px] flex-1">
+            <h2 class="text-[#0e141b] tracking-light text-[28px] font-bold leading-tight px-4 text-center pb-3 pt-5">Delete Team</h2>
+            <p class="text-[#0e141b] text-base font-normal leading-normal pb-3 pt-1 px-4 text-center">
+              您確定要刪除 {{ team.name }} 隊伍嗎？這個動作無法撤銷。
+            </p>
+            <form method="POST" action="{{ url_for('main.delete_team_confirmed', team_id=team.id) }}">
+              <div class="flex justify-center">
+                <div class="flex flex-1 gap-3 flex-wrap px-4 py-3 max-w-[480px] justify-center">
+            
+                  <!-- 取消按鈕 -->
+                  <a href="{{ url_for('main.list_users') }}">
+                    <button type="button"
+                      class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-[#e7edf3] text-[#0e141b] text-sm font-bold leading-normal tracking-[0.015em] grow">
+                      <span class="truncate">取消</span>
+                    </button>
+                  </a>
+            
+                  <!-- 刪除按鈕 -->
+                  <button type="submit"
+                    class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-[#1978e5] text-slate-50 text-sm font-bold leading-normal tracking-[0.015em] grow">
+                    <span class="truncate">刪除</span>
+                  </button>
+            
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
