@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8" />
-    <title>賽程表</title>
+    <title>賽程表 | 中正排球聯盟</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin />
     <link rel="stylesheet" as="style" onload="this.rel='stylesheet'"
@@ -11,239 +11,654 @@
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 </head>
 
-<body class="h-full w-full bg-slate-50" style='font-family: Lexend, "Noto Sans", sans-serif;'>
-    <div class="flex h-full w-full min-h-screen">
-        <!-- Sidebar -->
-        <aside class="w-80 min-h-screen h-full bg-slate-50 flex flex-col border-r border-[#e5e7eb]">
-            <div class="flex flex-col gap-4 p-4 pb-2">
-                <div>
-                    <h1 class="text-[#0e141b] text-base font-medium leading-normal">中正排球聯盟</h1>
-                    <p class="text-[#4e7097] text-sm font-normal leading-normal">{{ current_user.role }}</p>
+<body>
+    <div class="min-h-screen bg-gray-50 font-['Inter','Noto Sans',sans-serif]">
+        <div class="flex flex-col h-full min-h-screen">
+            <!-- Header -->
+            <header
+                class="flex items-center justify-between border-b border-[#eaeef1] px-10 py-3 bg-white fixed top-0 left-0 right-0 z-10">
+                <div class="flex items-center gap-4">
+                    <div class="size-4">
+                        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M44 4H30.6666V17.3334H17.3334V30.6666H4V44H44V4Z" fill="currentColor"></path>
+                        </svg>
+                    </div>
+                    <h2 class="text-lg font-bold text-[#101518] tracking-[-0.015em]">中正排球聯盟</h2>
                 </div>
-                <nav class="flex flex-col gap-2">
-                    <a href="{{ url_for('main.dashboard') }}">
-                        <button class="text-left flex items-center gap-2 px-3 py-2 rounded-full hover:bg-[#eaeef1]">
-                            <span class="text-sm font-medium text-[#101518]">Dashboard</span>
-                        </button>
-                    </a>
-                    <button class="text-left flex items-center gap-2 px-3 py-2 rounded-full hover:bg-[#eaeef1]">
-                        <span class="text-sm font-medium text-[#101518]">Teams</span>
-                    </button>
-                    <a href="{{ url_for('main.matches_page') }}">
-                        <button class="text-left flex items-center gap-2 px-3 py-2 rounded-full hover:bg-[#eaeef1]">
-                            <span class="text-sm font-medium text-[#101518]">Matches</span>
-                        </button>
-                    </a>
-                    <button class="text-left flex items-center gap-2 px-3 py-2 rounded-full hover:bg-[#eaeef1]">
-                        <span class="text-sm font-medium text-[#101518]">Settings</span>
-                    </button>
-                </nav>
+                <div class="flex flex-1 justify-end gap-8">
+                    <nav class="flex items-center gap-9">
+                        <a class="text-[#101518] text-sm font-medium"
+                            href="{{ url_for('main.dashboard') }}">Dashboard</a>
+                        <a class="text-[#101518] text-sm font-medium"
+                            href="{{ url_for('main.edit_profile') }}">Profile</a>
+                    </nav>
+                    <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10"
+                        style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDt2IBTIdCHam2F8XQEDrt_7eYY2hPMdKkYDilkB7cOMMGaoVDUtqfkgNImtBkTfueXva8doqU8PZT0puBWecaKF0jjDJfIj4MoLjDcgeCN1JjowkQoLT2DgEGahMD-C5OCVo8In0Iauj4aXK-qd2nYxqBaUTOW1h-aDYS6Y5Wo-3yV2Uw23pzgvK4IwYbWqYojbg77RYVqG3TW4uOKXfzdULQgar8h5KQY9Td_ntOiPe6gxvXpea3D4uOTTgsOnI0LlLuuLAv8rTLM");'>
+                    </div>
+                </div>
+            </header>
+
+            <div class="flex h-full w-full min-h-screen" style="padding-top: 64px;">
+                <!-- Sidebar -->
+                <aside class="w-80 h-[calc(100vh-64px)] bg-slate-50 border-r border-[#e5e7eb]
+           sticky top-16 flex flex-col overflow-auto p-4">
+                    <div class="flex flex-col gap-4 pb-2">
+                        <div>
+                            <h1 class="text-[#0e141b] text-base font-medium">{{ current_user.name }}</h1>
+                            {% if current_user.team.name %}
+                                <p class="text-[#4e7097] text-sm">{{ current_user.team.name }} - {{ current_user.role }}</p>
+                            {% else %}
+                                <p class="text-[#4e7097] text-sm">{{ current_user.role }}</p>
+                            {% endif %}
+                        </div>
+                        <nav class="flex flex-col gap-2">
+                            <a href="{{ url_for('main.dashboard') }}">
+                                <button
+                                    class="text-left flex items-center gap-2 px-3 py-2 rounded-full hover:bg-[#eaeef1]">
+                                    <span class="text-sm font-medium text-[#101518]">Dashboard</span>
+                                </button>
+                            </a>
+                            <a href="{{ url_for('main.list_teams') }}">
+                                <button
+                                    class="text-left flex items-center gap-2 px-3 py-2 rounded-full hover:bg-[#eaeef1]">
+                                    <span class="text-sm font-medium text-[#101518]">Teams</span>
+                                </button>
+                            </a>
+                            <a href="{{ url_for('main.matches_page') }}">
+                                <button
+                                    class="text-left flex items-center gap-2 px-3 py-2 rounded-full hover:bg-[#eaeef1]">
+                                    <span class="text-sm font-medium text-[#101518]">Matches</span>
+                                </button>
+                            </a>
+                            <button class="text-left flex items-center gap-2 px-3 py-2 rounded-full hover:bg-[#eaeef1]">
+                                <span class="text-sm font-medium text-[#101518]">Settings</span>
+                            </button>
+                        </nav>
+                    </div>
+                    <div class="mt-auto">
+                        <a href="{{ url_for('main.logout') }}"
+                            class="w-full px-3 py-2 bg-blue-100 rounded-lg text-blue-900 hover:bg-blue-200">
+                            登出
+                        </a>
+                    </div>
+                </aside>
+
+                <!-- Main Content -->
+                <main class="flex-1 flex flex-col h-full min-h-screen bg-white overflow-auto">
+                    <!-- Page Header -->
+                    <div class="px-8 py-6 border-b border-[#e5e7eb]">
+                        <p class="text-[#0e141b] text-[32px] font-bold leading-tight">Matches</p>
+                        <p class="text-[#4e7097] text-sm mt-1">Welcome back, {{ current_user.name }}</p>
+                    </div>
+
+                    <!-- Filter Section -->
+                    <div class="px-8 py-4 flex flex-wrap gap-4 bg-slate-50 border-b border-[#e5e7eb]">
+                        <div class="flex flex-col">
+                            <label for="teamTypeFilter" class="text-sm font-medium text-[#0e141b] mb-1">比賽類型</label>
+                            <select id="teamTypeFilter" onchange="applyFilters()"
+                                class="form-select rounded-md border-[#d0dbe7] bg-white px-3 py-2 text-sm">
+                                <option value="all">全部</option>
+                                <option value="男排">男排</option>
+                                <option value="女排">女排</option>
+                            </select>
+                        </div>
+                        <div class="flex flex-col">
+                            <label for="teamFilter" class="text-sm font-medium text-[#0e141b] mb-1">隊伍</label>
+                            <select id="teamFilter" onchange="applyFilters()"
+                                class="form-select rounded-md border-[#d0dbe7] bg-white px-3 py-2 text-sm">
+                                <option value="all">全部隊伍</option>
+                            </select>
+                        </div>
+                        <div class="flex flex-col">
+                            <label for="statusFilter" class="text-sm font-medium text-[#0e141b] mb-1">狀態</label>
+                            <select id="statusFilter" onchange="applyFilters()"
+                                class="form-select rounded-md border-[#d0dbe7] bg-white px-3 py-2 text-sm">
+                                <option value="all">全部狀態</option>
+                                <option value="尚未開始">尚未開始</option>
+                                <option value="進行中">進行中</option>
+                                <option value="確認中">確認中</option>
+                                <option value="已結束">已結束</option>
+                                <option value="已拒絕">已拒絕</option>
+                            </select>
+                        </div>
+                        <div class="flex items-end gap-2">
+                        </div>
+                    </div>
+
+
+                    <!-- Schedule Table -->
+                    <div class="px-4 py-3 @container">
+                        <div class="overflow-hidden rounded-xl border border-[#d4dbe2] bg-gray-50">
+                            <table class="min-w-[800px] divide-y divide-[#d4dbe2] bg-white">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th
+                                            class="table-col-120 w-[200px] px-4 py-3 text-left text-sm font-medium text-[#101418]">
+                                            比賽時間</th>
+                                        <th
+                                            class="table-col-240 w-[200px] px-4 py-3 text-left text-sm font-medium text-[#101418]">
+                                            類型</th>
+                                        <th
+                                            class="table-col-360 w-[200px] px-4 py-3 text-left text-sm font-medium text-[#101418]">
+                                            隊伍 1</th>
+                                        <th
+                                            class="table-col-480 w-[200px] px-4 py-3 text-left text-sm font-medium text-[#101418]">
+                                            隊伍 2</th>
+                                        <th
+                                            class="table-col-600 w-[150px] px-4 py-3 text-left text-sm font-medium text-[#101418]">
+                                            裁判</th>
+                                        <th
+                                            class="table-col-600 w-[150px] px-4 py-3 text-left text-sm font-medium text-[#101418]">
+                                            狀態</th>
+                                        {% if current_user.role in ['admin', 'captain'] %}
+                                        <th
+                                            class="table-col-840 w-[150px] px-4 py-3 text-left text-sm font-medium text-[#101418]">
+                                            操作</th>
+                                        {% endif %}
+                                    </tr>
+                                </thead>
+                                <tbody id="scheduleTableBody" class="divide-y divide-[#d4dbe2]">
+                                    <!-- JS 動態填充 -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- 編輯比賽資訊的 Modal -->
+                    <div id="editMatchModal"
+                        class="modal hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+                        <div class="relative top-20 mx-auto p-5 border w-[600px] shadow-lg rounded-md bg-white">
+                            <div class="mt-3">
+                                <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">編輯比賽資訊</h3>
+                                <form id="editMatchForm">
+                                    <input type="hidden" id="editMatchId">
+                                    <div class="mb-4">
+                                        <label class="block text-gray-700 text-sm font-bold mb-2">比賽期間</label>
+                                        <span id="matchPeriod" class="text-sm text-gray-600"></span>
+                                        <small class="block text-gray-500 text-xs">（含兩週調整緩衝期）</small>
+                                    </div>
+                                    <div class="mb-4">
+                                        <label class="block text-gray-700 text-sm font-bold mb-2">比賽時間</label>
+                                        <select id="editMatchTime"
+                                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                                            <option value="">請選擇時間</option>
+                                            <option value="TBD">待定</option>
+                                        </select>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-4 mb-4">
+                                        <div>
+                                            <label class="block text-gray-700 text-sm font-bold mb-2">第一局比分</label>
+                                            <div class="flex items-center gap-2">
+                                                <input type="number" id="editTeam1Set1"
+                                                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                                                <span class="text-gray-700">:</span>
+                                                <input type="number" id="editTeam2Set1"
+                                                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label class="block text-gray-700 text-sm font-bold mb-2">第二局比分</label>
+                                            <div class="flex items-center gap-2">
+                                                <input type="number" id="editTeam1Set2"
+                                                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                                                <span class="text-gray-700">:</span>
+                                                <input type="number" id="editTeam2Set2"
+                                                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mb-4">
+                                        <label class="block text-gray-700 text-sm font-bold mb-2">第三局比分</label>
+                                        <div class="flex items-center gap-2">
+                                            <input type="number" id="editTeam1Set3"
+                                                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                                            <span class="text-gray-700">:</span>
+                                            <input type="number" id="editTeam2Set3"
+                                                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-4 mb-4">
+                                        <div>
+                                            <label class="block text-gray-700 text-sm font-bold mb-2">燈錢(主隊)</label>
+                                            <input type="number" id="editTeam1LampFee"
+                                                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                                        </div>
+                                        <div>
+                                            <label class="block text-gray-700 text-sm font-bold mb-2">燈錢(客隊)</label>
+                                            <input type="number" id="editTeam2LampFee"
+                                                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                                        </div>
+                                    </div>
+                                    <div class="mb-4">
+                                        <label class="block text-gray-700 text-sm font-bold mb-2">狀態</label>
+                                        <select id="editStatus"
+                                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                                            <option value="pending">尚未開始</option>
+                                            <option value="waiting_confirm">等待確認</option>
+                                            <option value="confirmed">已確認</option>
+                                            <option value="rejected">已拒絕</option>
+                                        </select>
+                                    </div>
+                                    <div class="flex justify-end gap-2">
+                                        <button type="button" onclick="closeEditModal()"
+                                            class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400">取消</button>
+                                        <button type="submit"
+                                            class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">儲存</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 比賽詳細資訊的 Modal -->
+                    <div id="matchDetailsModal"
+                        class="modal hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+                        <div class="relative top-20 mx-auto p-5 border w-[600px] shadow-lg rounded-md bg-white">
+                            <div class="mt-3">
+                                <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">比賽詳細資訊</h3>
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-gray-700 text-sm font-bold mb-2">比賽時間</label>
+                                        <p id="detailMatchTime" class="text-gray-600"></p>
+                                    </div>
+                                    <div>
+                                        <label class="block text-gray-700 text-sm font-bold mb-2">比賽類型</label>
+                                        <p id="detailTeamType" class="text-gray-600"></p>
+                                    </div>
+                                    <div>
+                                        <label class="block text-gray-700 text-sm font-bold mb-2">參賽隊伍</label>
+                                        <p id="detailTeams" class="text-gray-600"></p>
+                                    </div>
+                                    <div>
+                                        <label class="block text-gray-700 text-sm font-bold mb-2">裁判</label>
+                                        <p id="detailReferee" class="text-gray-600"></p>
+                                    </div>
+                                    <div>
+                                        <label class="block text-gray-700 text-sm font-bold mb-2">比分</label>
+                                        <p id="detailScore" class="text-gray-600"></p>
+                                    </div>
+                                    <div>
+                                        <label class="block text-gray-700 text-sm font-bold mb-2">狀態</label>
+                                        <p id="detailStatus" class="text-gray-600"></p>
+                                    </div>
+                                    <div class="flex justify-end">
+                                        <button onclick="closeMatchDetailsModal()"
+                                            class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400">關閉</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 添加調賽申請的 Modal -->
+                    <div id="rescheduleModal"
+                        class="modal hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+                        <div class="relative top-20 mx-auto p-5 border w-[600px] shadow-lg rounded-md bg-white">
+                            <div class="mt-3">
+                                <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">調賽申請</h3>
+                                <form id="rescheduleForm">
+                                    <input type="hidden" id="rescheduleMatchId">
+                                    <div class="mb-4">
+                                        <label class="block text-gray-700 text-sm font-bold mb-2">比賽期間</label>
+                                        <span id="reschedulePeriod" class="text-sm text-gray-600"></span>
+                                    </div>
+                                    <div class="mb-4">
+                                        <label class="block text-gray-700 text-sm font-bold mb-2">比賽時間</label>
+                                        <select id="rescheduleTime"
+                                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                                            <option value="">請選擇時間</option>
+                                            <option value="TBD">待定</option>
+                                        </select>
+                                    </div>
+                                    <div class="flex justify-end gap-2">
+                                        <button type="button" onclick="closeRescheduleModal()"
+                                            class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400">取消</button>
+                                        <button type="submit"
+                                            class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">提交</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Container Query CSS -->
+                    <style>
+                        @container (max-width:120px) {
+                            .table-col-120 {
+                                display: none;
+                            }
+                        }
+
+                        @container (max-width:240px) {
+                            .table-col-240 {
+                                display: none;
+                            }
+                        }
+
+                        @container (max-width:360px) {
+                            .table-col-360 {
+                                display: none;
+                            }
+                        }
+
+                        @container (max-width:480px) {
+                            .table-col-480 {
+                                display: none;
+                            }
+                        }
+
+                        @container (max-width:600px) {
+                            .table-col-600 {
+                                display: none;
+                            }
+                        }
+
+                        @container (max-width:720px) {
+                            .table-col-720 {
+                                display: none;
+                            }
+                        }
+
+                        @container (max-width:840px) {
+                            .table-col-840 {
+                                display: none;
+                            }
+                        }
+                    </style>
+                </main>
             </div>
-            <div class="p-4 mt-auto">
-                <a href="{{ url_for('main.logout') }}"
-                    class="w-full px-3 py-2 bg-blue-100 rounded-lg text-blue-900 hover:bg-blue-200">登出</a>
-            </div>
-        </aside>
 
-        <!-- Main Content -->
-        <main class="flex-1 flex flex-col h-full min-h-screen bg-white overflow-auto">
-            <!-- Page Header -->
-            <div class="px-8 py-6 border-b border-[#e5e7eb]">
-                <p class="text-[#0e141b] text-[32px] font-bold leading-tight">Matches</p>
-                <p class="text-[#4e7097] text-sm mt-1">Welcome back, {{ current_user.name }}</p>
-            </div>
+            <!-- JavaScript -->
+            <script>
+                let allMatches = [];
 
-            <!-- Filter Section -->
-            <div class="px-8 py-4 flex flex-wrap gap-4 bg-slate-50 border-b border-[#e5e7eb]">
-                <div class="flex flex-col">
-                    <label for="teamTypeFilter" class="text-sm font-medium text-[#0e141b] mb-1">比賽類型</label>
-                    <select id="teamTypeFilter" onchange="applyFilters()"
-                        class="form-select rounded-md border-[#d0dbe7] bg-white px-3 py-2 text-sm">
-                        <option value="all">全部</option>
-                        <option value="男排">男排</option>
-                        <option value="女排">女排</option>
-                    </select>
-                </div>
-                <div class="flex flex-col">
-                    <label for="teamFilter" class="text-sm font-medium text-[#0e141b] mb-1">隊伍</label>
-                    <select id="teamFilter" onchange="applyFilters()"
-                        class="form-select rounded-md border-[#d0dbe7] bg-white px-3 py-2 text-sm">
-                        <option value="all">全部隊伍</option>
-                    </select>
-                </div>
-                <div class="flex flex-col">
-                    <label for="statusFilter" class="text-sm font-medium text-[#0e141b] mb-1">狀態</label>
-                    <select id="statusFilter" onchange="applyFilters()"
-                        class="form-select rounded-md border-[#d0dbe7] bg-white px-3 py-2 text-sm">
-                        <option value="all">全部狀態</option>
-                        <option value="尚未開始">尚未開始</option>
-                        <option value="進行中">進行中</option>
-                        <option value="確認中">確認中</option>
-                        <option value="已結束">已結束</option>
-                        <option value="已拒絕">已拒絕</option>
-                    </select>
-                </div>
-                <div class="flex items-end gap-2">
-                </div>
-            </div>
+                function updateTeamOptions(matches) {
+                    const teamFilter = document.getElementById('teamFilter');
+                    const teams = new Set();
+                    matches.forEach(m => {
+                        teams.add(m.home_team);
+                        teams.add(m.away_team);
+                    });
+                    // 清除舊選項（保留第一個 "全部隊伍"）
+                    while (teamFilter.options.length > 1) {
+                        teamFilter.remove(1);
+                    }
+                    Array.from(teams).sort().forEach(name => {
+                        const opt = document.createElement('option');
+                        opt.value = name;
+                        opt.textContent = name;
+                        teamFilter.appendChild(opt);
+                    });
+                }
 
+                function applyFilters() {
+                    const type = document.getElementById('teamTypeFilter').value;
+                    const team = document.getElementById('teamFilter').value;
+                    const status = document.getElementById('statusFilter').value;
+                    const filtered = allMatches.filter(m => {
+                        return (type === 'all' || m.team_type === type)
+                            && (team === 'all' || m.home_team === team || m.away_team === team)
+                            && (status === 'all' || m.status === status);
+                    });
+                    displayMatches(filtered);
+                }
 
-            <!-- Schedule Table -->
-            <div class="px-4 py-3 @container">
-                <div class="overflow-hidden rounded-xl border border-[#d4dbe2] bg-gray-50">
-                    <table class="min-w-[800px] divide-y divide-[#d4dbe2] bg-white">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th
-                                    class="table-col-120 w-[200px] px-4 py-3 text-left text-sm font-medium text-[#101418]">
-                                    比賽時間</th>
-                                <th
-                                    class="table-col-240 w-[200px] px-4 py-3 text-left text-sm font-medium text-[#101418]">
-                                    類型</th>
-                                <th
-                                    class="table-col-360 w-[200px] px-4 py-3 text-left text-sm font-medium text-[#101418]">
-                                    隊伍 1</th>
-                                <th
-                                    class="table-col-480 w-[200px] px-4 py-3 text-left text-sm font-medium text-[#101418]">
-                                    隊伍 2</th>
-                                <th
-                                    class="table-col-600 w-[150px] px-4 py-3 text-left text-sm font-medium text-[#101418]">
-                                    裁判</th>
-                                <th
-                                    class="table-col-600 w-[150px] px-4 py-3 text-left text-sm font-medium text-[#101418]">
-                                    狀態</th>
-                                <th
-                                    class="table-col-840 w-[150px] px-4 py-3 text-left text-sm font-medium text-[#101418]">
-                                    操作</th>
-                            </tr>
-                        </thead>
-                        <tbody id="scheduleTableBody" class="divide-y divide-[#d4dbe2]">
-                            <!-- JS 動態填充 -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+                function resetFilters() {
+                    document.getElementById('teamTypeFilter').value = 'all';
+                    document.getElementById('teamFilter').value = 'all';
+                    document.getElementById('statusFilter').value = 'all';
+                    displayMatches(allMatches);
+                }
 
-            <!-- Container Query CSS -->
-            <style>
-                @container (max-width:120px) {
-                    .table-col-120 {
-                        display: none;
+                function displayMatches(matches) {
+                    const tbody = document.getElementById('scheduleTableBody');
+                    tbody.innerHTML = '';
+                    matches.forEach(m => {
+                        const row = document.createElement('tr');
+                        row.className = 'hover:bg-[#f9f9f9] cursor-pointer';
+
+                        // 檢查是否為當前用戶的隊伍的比賽
+                        const isUserTeamMatch = m.home_team === current_user_team_name || m.away_team === current_user_team_name;
+
+                        row.innerHTML = `
+                    <td class="px-4 py-2 text-sm text-[#101518]">${m.time}</td>
+                    <td class="px-4 py-2 text-sm text-[#101518]">${m.team_type}</td>
+                    <td class="px-4 py-2 text-sm text-[#101518]">${m.home_team}</td>
+                    <td class="px-4 py-2 text-sm text-[#101518]">${m.away_team}</td>
+                    <td class="px-4 py-2 text-sm text-[#101518]">${m.referee}</td>
+                    <td class="px-4 py-2 text-sm font-medium text-[#0e141b]">${m.status}</td>
+                    ${current_user_role === 'admin' ? `
+                        <td class="px-4 py-2 text-sm text-[#101518]">
+                            <button onclick="openEditModal('${m.id}')" class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">
+                                編輯
+                            </button>
+                        </td>
+                    ` : current_user_role === 'captain' && isUserTeamMatch ? `
+                        <td class="px-4 py-2 text-sm text-[#101518]">
+                            <button onclick="openRescheduleModal('${m.id}')" class="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600">
+                                申請調賽
+                            </button>
+                        </td>
+                    ` : ''}
+                `;
+
+                        // 為每一列添加點擊事件，但排除按鈕那一欄
+                        row.addEventListener('click', (event) => {
+                            // 如果點擊的是按鈕或其父元素，則不觸發詳細資訊
+                            if (event.target.closest('button')) {
+                                return;
+                            }
+                            showMatchDetails(m);
+                        });
+
+                        tbody.appendChild(row);
+                    });
+                }
+
+                function showMatchDetails(match) {
+                    document.getElementById('detailMatchTime').textContent = match.time;
+                    document.getElementById('detailTeamType').textContent = match.team_type;
+                    document.getElementById('detailTeams').textContent = `${match.home_team} vs ${match.away_team}`;
+                    document.getElementById('detailReferee').textContent = match.referee;
+                    document.getElementById('detailScore').textContent = match.score || '尚未有比分';
+                    document.getElementById('detailStatus').textContent = match.status;
+
+                    document.getElementById('matchDetailsModal').classList.remove('hidden');
+                }
+
+                function closeMatchDetailsModal() {
+                    document.getElementById('matchDetailsModal').classList.add('hidden');
+                }
+
+                async function openEditModal(matchId) {
+                    try {
+                        // 獲取比賽詳細資料
+                        const matchResponse = await fetch(`/api/match/${matchId}`);
+                        const match = await matchResponse.json();
+
+                        // 獲取可用時間
+                        const timesResponse = await fetch(`/api/available_times/${matchId}`);
+                        const timesData = await timesResponse.json();
+
+                        if (timesData.success) {
+                            // 更新比賽期間顯示
+                            document.getElementById('matchPeriod').textContent =
+                                `${timesData.period.start} 至 ${timesData.period.end}`;
+
+                            // 更新時間選項
+                            const timeSelect = document.getElementById('editMatchTime');
+                            timeSelect.innerHTML = '<option value="">請選擇時間</option><option value="TBD">待定</option>';
+                            timesData.available_times.forEach(time => {
+                                const option = document.createElement('option');
+                                option.value = time;
+                                option.textContent = time.replace('T', ' ');
+                                timeSelect.appendChild(option);
+                            });
+                        }
+
+                        // 填充表單資料
+                        document.getElementById('editMatchId').value = match.id;
+                        document.getElementById('editMatchTime').value = match.time ? match.time.replace(' ', 'T') : 'TBD';
+                        document.getElementById('editTeam1Set1').value = match.team1_set1 || '';
+                        document.getElementById('editTeam2Set1').value = match.team2_set1 || '';
+                        document.getElementById('editTeam1Set2').value = match.team1_set2 || '';
+                        document.getElementById('editTeam2Set2').value = match.team2_set2 || '';
+                        document.getElementById('editTeam1Set3').value = match.team1_set3 || '';
+                        document.getElementById('editTeam2Set3').value = match.team2_set3 || '';
+                        document.getElementById('editTeam1LampFee').value = match.team1_lamp_fee || '';
+                        document.getElementById('editTeam2LampFee').value = match.team2_lamp_fee || '';
+                        document.getElementById('editStatus').value = match.status;
+
+                        document.getElementById('editMatchModal').classList.remove('hidden');
+                    } catch (error) {
+                        console.error('Error opening edit modal:', error);
+                        alert('無法獲取比賽詳細資料');
                     }
                 }
 
-                @container (max-width:240px) {
-                    .table-col-240 {
-                        display: none;
-                    }
+                function closeEditModal() {
+                    document.getElementById('editMatchModal').classList.add('hidden');
                 }
 
-                @container (max-width:360px) {
-                    .table-col-360 {
-                        display: none;
+                document.getElementById('editMatchForm').addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const matchId = document.getElementById('editMatchId').value;
+                    const time = document.getElementById('editMatchTime').value;
+                    const team1Set1 = document.getElementById('editTeam1Set1').value;
+                    const team2Set1 = document.getElementById('editTeam2Set1').value;
+                    const team1Set2 = document.getElementById('editTeam1Set2').value;
+                    const team2Set2 = document.getElementById('editTeam2Set2').value;
+                    const team1Set3 = document.getElementById('editTeam1Set3').value;
+                    const team2Set3 = document.getElementById('editTeam2Set3').value;
+                    const team1LampFee = document.getElementById('editTeam1LampFee').value;
+                    const team2LampFee = document.getElementById('editTeam2LampFee').value;
+                    const status = document.getElementById('editStatus').value;
+
+                    try {
+                        const response = await fetch(`/api/match/${matchId}`, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                match_time: time === 'TBD' ? '' : time,
+                                team1_set1: team1Set1 || '',
+                                team2_set1: team2Set1 || '',
+                                team1_set2: team1Set2 || '',
+                                team2_set2: team2Set2 || '',
+                                team1_set3: team1Set3 || '',
+                                team2_set3: team2Set3 || '',
+                                team1_lamp_fee: team1LampFee || '',
+                                team2_lamp_fee: team2LampFee || '',
+                                status: status
+                            })
+                        });
+
+                        if (response.ok) {
+                            closeEditModal();
+                            updateSchedule();
+                        } else {
+                            const data = await response.json();
+                            alert(data.message || '更新失敗，請稍後再試');
+                        }
+                    } catch (error) {
+                        console.error('Error updating match:', error);
+                        alert('更新失敗，請稍後再試');
                     }
+                });
+
+                function updateSchedule() {
+                    fetch('/api/matches')
+                        .then(res => res.json())
+                        .then(data => {
+                            allMatches = data;
+                            updateTeamOptions(data);
+                            displayMatches(data);
+                        })
+                        .catch(err => console.error('Error fetching matches:', err));
                 }
 
-                @container (max-width:480px) {
-                    .table-col-480 {
-                        display: none;
-                    }
+                // 添加調賽申請的 Modal
+                function openRescheduleModal(matchId) {
+                    // 獲取可用時間
+                    fetch(`/api/available_times/${matchId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                // 顯示比賽期間
+                                document.getElementById('reschedulePeriod').textContent =
+                                    `${data.period.start} 至 ${data.period.end}`;
+
+                                // 更新時間選項
+                                const timeSelect = document.getElementById('rescheduleTime');
+                                timeSelect.innerHTML = '<option value="">請選擇時間</option><option value="TBD">待定</option>';
+                                data.available_times.forEach(time => {
+                                    const option = document.createElement('option');
+                                    option.value = time;
+                                    option.textContent = time.replace('T', ' ');
+                                    timeSelect.appendChild(option);
+                                });
+
+                                // 顯示 Modal
+                                document.getElementById('rescheduleModal').classList.remove('hidden');
+                                document.getElementById('rescheduleMatchId').value = matchId;
+                            } else {
+                                alert('無法獲取可用時間：' + data.message);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error fetching available times:', error);
+                            alert('獲取可用時間時發生錯誤');
+                        });
                 }
 
-                @container (max-width:600px) {
-                    .table-col-600 {
-                        display: none;
-                    }
+                function closeRescheduleModal() {
+                    document.getElementById('rescheduleModal').classList.add('hidden');
                 }
 
-                @container (max-width:720px) {
-                    .table-col-720 {
-                        display: none;
+                // 添加調賽申請表單提交處理
+                document.getElementById('rescheduleForm').addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const matchId = document.getElementById('rescheduleMatchId').value;
+                    const requestedTime = document.getElementById('rescheduleTime').value;
+
+                    try {
+                        // 提交調賽申請
+                        const response = await fetch('/api/reschedule/request', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                match_id: matchId,
+                                requested_time: requestedTime
+                            })
+                        });
+
+                        const data = await response.json();
+                        if (data.success) {
+                            closeRescheduleModal();
+                            alert('調賽申請已送出，等待對方隊伍及裁判確認');
+                            updateSchedule();
+                        } else {
+                            alert(data.message || '申請失敗，請稍後再試');
+                        }
+                    } catch (error) {
+                        console.error('Error submitting reschedule request:', error);
+                        alert('申請失敗，請稍後再試');
                     }
-                }
+                });
 
-                @container (max-width:840px) {
-                    .table-col-840 {
-                        display: none;
-                    }
-                }
-            </style>
-        </main>
-    </div>
+                // 在頁面載入時獲取當前用戶的角色和隊伍名稱
+                let current_user_role = '{{ current_user.role }}';
+                let current_user_team_name = '{{ current_user.team.name if current_user.team else "" }}';
+                let current_user_team_id = '{{ current_user.team.id if current_user.team else "" }}';
 
-    <!-- JavaScript -->
-    <script>
-        let allMatches = [];
-
-        function updateTeamOptions(matches) {
-            const teamFilter = document.getElementById('teamFilter');
-            const teams = new Set();
-            matches.forEach(m => {
-                teams.add(m.home_team);
-                teams.add(m.away_team);
-            });
-            // 清除舊選項（保留第一個 “全部隊伍”）
-            while (teamFilter.options.length > 1) {
-                teamFilter.remove(1);
-            }
-            Array.from(teams).sort().forEach(name => {
-                const opt = document.createElement('option');
-                opt.value = name;
-                opt.textContent = name;
-                teamFilter.appendChild(opt);
-            });
-        }
-
-        function applyFilters() {
-            const type = document.getElementById('teamTypeFilter').value;
-            const team = document.getElementById('teamFilter').value;
-            const status = document.getElementById('statusFilter').value;
-            const filtered = allMatches.filter(m => {
-                return (type === 'all' || m.team_type === type)
-                    && (team === 'all' || m.home_team === team || m.away_team === team)
-                    && (status === 'all' || m.status === status);
-            });
-            displayMatches(filtered);
-        }
-
-        function resetFilters() {
-            document.getElementById('teamTypeFilter').value = 'all';
-            document.getElementById('teamFilter').value = 'all';
-            document.getElementById('statusFilter').value = 'all';
-            displayMatches(allMatches);
-        }
-
-        function displayMatches(matches) {
-            const tbody = document.getElementById('scheduleTableBody');
-            tbody.innerHTML = '';
-            matches.forEach(m => {
-                const row = document.createElement('tr');
-                row.className = 'hover:bg-[#f9f9f9] cursor-pointer';
-                row.innerHTML = `
-          <td class="px-4 py-2 text-sm text-[#101518]">${m.time}</td>
-          <td class="px-4 py-2 text-sm text-[#101518]">${m.team_type}</td>
-          <td class="px-4 py-2 text-sm text-[#101518]">${m.home_team}</td>
-          <td class="px-4 py-2 text-sm text-[#101518]">${m.away_team}</td>
-          <td class="px-4 py-2 text-sm text-[#101518]">${m.referee}</td>
-          <td class="px-4 py-2 text-sm font-medium text-[#0e141b]">${m.status}</td>
-        `;
-                tbody.appendChild(row);
-            });
-        }
-
-        function updateSchedule() {
-            fetch('/api/matches')
-                .then(res => res.json())
-                .then(data => {
-                    allMatches = data;
-                    updateTeamOptions(data);
-                    displayMatches(data);
-                })
-                .catch(err => console.error('Error fetching matches:', err));
-        }
-
-        document.addEventListener('DOMContentLoaded', updateSchedule);
-    </script>
+                // 定期檢查待處理的調賽申請
+                document.addEventListener('DOMContentLoaded', () => {
+                    updateSchedule();
+                });
+            </script>
 </body>
 
 </html>
