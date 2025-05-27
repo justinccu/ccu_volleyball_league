@@ -1,13 +1,83 @@
 <!DOCTYPE html>
-<html>
-<head><title>登入</title></head>
-<body>
-    <h2>登入</h2>
-    <form method="POST">
-        帳號: <input name="username"><br>
-        密碼: <input type="password" name="password"><br>
-        <button type="submit">登入</button>
-    </form>
-    <a href="/register">還沒有帳號？註冊</a>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>VolleyU 登入</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin />
+    <link rel="stylesheet" as="style" onload="this.rel='stylesheet'"
+        href="https://fonts.googleapis.com/css2?display=swap&family=Lexend:wght@400;500;700;900&family=Noto+Sans:wght@400;500;700;900" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+</head>
+
+<body class="relative flex size-full min-h-screen flex-col bg-slate-50 overflow-x-hidden"
+    style='font-family: Lexend, "Noto Sans", sans-serif;'>
+    <div class="layout-container flex h-full grow flex-col">
+        <!-- Header -->
+        <header class="flex items-center justify-between border-b border-[#e7edf3] px-10 py-3">
+            <div class="flex items-center gap-4 text-[#0e141b]">
+                <div class="size-4">
+                    <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M44 4H30.6666V17.3334H17.3334V30.6666H4V44H44V4Z" fill="currentColor"></path>
+                    </svg>
+                </div>
+                <h2 class="text-[#0e141b] text-lg font-bold leading-tight tracking-[-0.015em]">中正排球聯盟</h2>
+            </div>
+        </header>
+
+        <!-- Login Form -->
+        <div class="px-40 flex flex-1 justify-center py-5">
+            <div class="layout-content-container flex flex-col w-[512px] max-w-[512px] py-5">
+                <h2 class="text-[#0e141b] text-[28px] font-bold text-center pb-3 pt-5">Welcome back</h2>
+
+                <!-- Flask Flash Messages -->
+                {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                <div class="text-red-600 px-4 pb-4 font-medium text-sm">
+                    {% for msg in messages %}
+                    <p>{{ msg }}</p>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                {% endwith %}
+
+                <!-- Login Form -->
+                <form method="POST" action="{{ url_for('main.login') }}">
+                    <div class="flex flex-wrap gap-4 px-4 py-3">
+                        <label class="flex flex-col flex-1">
+                            <p class="text-[#0e141b] font-medium pb-2">Username</p>
+                            <input name="username" required placeholder="Enter your username"
+                                class="form-input w-full rounded-xl border border-[#d0dbe7] bg-slate-50 text-[#0e141b] h-14 p-4 placeholder:text-[#4e7097]" />
+                        </label>
+                    </div>
+
+                    <div class="flex flex-wrap gap-4 px-4 py-3">
+                        <label class="flex flex-col flex-1">
+                            <p class="text-[#0e141b] font-medium pb-2">Password</p>
+                            <input type="password" name="password" required placeholder="Enter your password"
+                                class="form-input w-full rounded-xl border border-[#d0dbe7] bg-slate-50 text-[#0e141b] h-14 p-4 placeholder:text-[#4e7097]" />
+                        </label>
+                    </div>
+
+                    <div class="text-right text-sm px-4 text-[#4e7097] underline pb-2">
+                        <a href="#">Forgot password?</a>
+                    </div>
+
+                    <div class="flex px-4 py-3">
+                        <button type="submit"
+                            class="flex flex-1 justify-center items-center rounded-full h-10 bg-[#1978e5] text-white text-sm font-bold">
+                            Log In
+                        </button>
+                    </div>
+                </form>
+
+                <p class="text-center text-sm text-[#5c718a] mt-4">
+                    Don't have an account?
+                    <a href="{{ url_for('main.register') }}">Sign up</a>
+                </p>
+            </div>
+        </div>
+    </div>
 </body>
+
 </html>

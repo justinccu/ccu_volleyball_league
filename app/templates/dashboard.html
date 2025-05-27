@@ -112,6 +112,46 @@
             color: white;
             border-color: #0056b3;
         }
+        .confirmed-text {
+            color: #28a745;
+            font-weight: bold;
+            margin: 0;
+            padding: 5px 10px;
+        }
+        .rejected-text {
+            color: #dc3545;
+            font-weight: bold;
+            margin: 0;
+            padding: 5px 10px;
+        }
+        .reschedule-request {
+            margin-bottom: 15px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #f8f9fa;
+        }
+        .request-info {
+            margin-bottom: 10px;
+        }
+        .request-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .request-actions button {
+            padding: 5px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .request-actions button:first-child {
+            background-color: #28a745;
+            color: white;
+        }
+        .request-actions button:last-child {
+            background-color: #dc3545;
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -202,6 +242,7 @@
                     <label>比賽時間：</label>
                     <select id="editMatchTime">
                         <option value="">請選擇時間</option>
+                        <option value="TBD">待定</option>
                     </select>
                 </div>
                 <div>
@@ -267,6 +308,14 @@
 
         <h3>裁判登錄比賽結果</h3>
         <a href="/referee/matches"><button>我要登錄成績</button></a>
+
+        <h3>調賽申請</h3>
+        <a href="/reschedule/request"><button>申請調賽</button></a>
+
+        <h3>待處理的調賽申請</h3>
+        <div id="pending-reschedules">
+            <!-- 動態填充內容 -->
+        </div>
     {% endif %}
 
     {% if current_user.role == 'visitor' %}
@@ -368,7 +417,15 @@
                     {% endif %}
                 `;
                 
-                row.addEventListener('click', () => showMatchDetails(match));
+                // 為每一列添加點擊事件，但排除編輯按鈕那一欄
+                row.addEventListener('click', (event) => {
+                    // 如果點擊的是編輯按鈕或其父元素，則不觸發詳細資訊
+                    if (event.target.closest('.edit-button')) {
+                        return;
+                    }
+                    showMatchDetails(match);
+                });
+                
                 tbody.appendChild(row);
             });
         }
@@ -390,10 +447,10 @@
             modalContent.innerHTML = `
                 <p><strong>比賽時間：</strong>${match.time}</p>
                 <p><strong>比賽類型：</strong>${match.team_type}</p>
-                <p><strong>隊伍1：</strong>${match.home_team}</p>
-                <p><strong>隊伍2：</strong>${match.away_team}</p>
-                <p><strong>比分：</strong>${match.score || '尚未開始'}</p>
-                <p><strong>裁判：</strong>${match.referee || '待定'}</p>
+                <p><strong>隊伍1:</strong>${match.home_team}</p>
+                <p><strong>隊伍2:</strong>${match.away_team}</p>
+                <p><strong>比分:</strong>${match.score || '尚未開始'}</p>
+                <p><strong>裁判:</strong>${match.referee || '待定'}</p>
             `;
             modal.style.display = 'block';
         }
@@ -418,7 +475,7 @@
                             `<small style="color: #666;">（原始結束日期：${data.period.original_end}）</small>`;
 
                         const timeSelect = document.getElementById('editMatchTime');
-                        timeSelect.innerHTML = '<option value="">請選擇時間</option>';
+                        timeSelect.innerHTML = '<option value="">請選擇時間</option><option value="TBD">待定</option>';
                         
                         data.available_times.forEach(time => {
                             const option = document.createElement('option');
@@ -541,8 +598,155 @@
             });
         };
 
-        // 初始載入賽程表
-        updateSchedule();
+        // 添加全局變數來存儲當前用戶的隊伍 ID
+        let currentUserTeamId = null;
+
+        // 在頁面載入時獲取當前用戶的隊伍 ID
+        function getCurrentUserTeamId() {
+            return fetch('/api/current_user_team')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        currentUserTeamId = data.team_id;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching user team:', error);
+                });
+        }
+
+        // 獲取待處理的調賽申請
+        function fetchPendingReschedules() {
+            fetch('/api/pending_reschedules')
+                .then(response => response.json())
+                .then(data => {
+                    const container = document.getElementById('pending-reschedules');
+                    container.innerHTML = '';
+                    
+                    if (!data.requests || data.requests.length === 0) {
+                        container.innerHTML = '<p>目前沒有待處理的調賽申請</p>';
+                        return;
+                    }
+
+                    data.requests.forEach(request => {
+                        const div = document.createElement('div');
+                        div.className = 'reschedule-request';
+                        div.setAttribute('data-request-id', request.id);
+                        
+                        // 判斷當前用戶的隊伍是否為請求方
+                        const isRequester = currentUserTeamId && request.requester_team.id === currentUserTeamId;
+                        
+                        // 判斷當前用戶的隊伍是否為對手方
+                        const isOpponent = currentUserTeamId && 
+                            (request.match.team1.id === currentUserTeamId || request.match.team2.id === currentUserTeamId) &&
+                            !isRequester;
+                        
+                        // 判斷當前用戶的隊伍是否為裁判
+                        const isReferee = currentUserTeamId && 
+                            request.match.referee_id === currentUserTeamId;
+                        
+                        // 根據角色判斷是否已確認
+                        let isConfirmed = false;
+                        if (isRequester) {
+                            isConfirmed = request.requester_team_confirmed;
+                        } else if (isOpponent) {
+                            isConfirmed = request.opponent_team_confirmed;
+                        } else if (isReferee) {
+                            isConfirmed = request.referee_confirmed;
+                        }
+
+                        div.innerHTML = `
+                            <div class="request-info">
+                                <p>比賽：${request.match.team1.name} vs ${request.match.team2.name}</p>
+                                <p>原定時間：${request.match.match_time}</p>
+                                <p>申請時間：${request.requested_time}</p>
+                                <p>申請隊伍：${request.requester_team.name}</p>
+                                <p>狀態：${request.status === 'pending' ? '待確認' : request.status === 'approved' ? '已通過' : '已拒絕'}</p>
+                            </div>
+                            ${!isRequester && request.status === 'pending' ? `
+                                <div class="request-actions">
+                                    ${!isConfirmed ? `
+                                        <button onclick="confirmReschedule(${request.id})">同意</button>
+                                        <button onclick="rejectReschedule(${request.id})">拒絕</button>
+                                    ` : `
+                                        <p class="confirmed-text">已確認</p>
+                                    `}
+                                </div>
+                            ` : ''}
+                        `;
+                        container.appendChild(div);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching pending reschedules:', error);
+                    document.getElementById('pending-reschedules').innerHTML = 
+                        '<p>載入調賽申請時發生錯誤</p>';
+                });
+        }
+
+        // 添加確認和拒絕的處理函數
+        function confirmReschedule(requestId) {
+            fetch('/api/confirm_reschedule', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ request_id: requestId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 更新特定請求的顯示
+                    const requestElement = document.querySelector(`[data-request-id="${requestId}"]`);
+                    if (requestElement) {
+                        const actionsDiv = requestElement.querySelector('.request-actions');
+                        if (actionsDiv) {
+                            actionsDiv.innerHTML = '<p class="confirmed-text">已確認</p>';
+                        }
+                    }
+                } else {
+                    alert('確認調賽申請失敗：' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error confirming reschedule:', error);
+                alert('確認調賽申請時發生錯誤');
+            });
+        }
+
+        function rejectReschedule(requestId) {
+            fetch(`/api/reschedule/reject/${requestId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 更新特定請求的顯示
+                    const requestElement = document.querySelector(`[data-request-id="${requestId}"]`);
+                    if (requestElement) {
+                        const actionsDiv = requestElement.querySelector('.request-actions');
+                        if (actionsDiv) {
+                            actionsDiv.innerHTML = '<p class="rejected-text">已拒絕</p>';
+                        }
+                    }
+                } else {
+                    alert('拒絕調賽申請失敗：' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error rejecting reschedule:', error);
+                alert('拒絕調賽申請時發生錯誤');
+            });
+        }
+
+        // 初始載入
+        getCurrentUserTeamId().then(() => {
+            updateSchedule();
+            fetchPendingReschedules();
+        });
     </script>
 </body>
 </html>

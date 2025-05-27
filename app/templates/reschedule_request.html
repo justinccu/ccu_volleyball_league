@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>申請調賽</title>
+    <style>
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .match-list {
+            margin-bottom: 20px;
+        }
+        .match-item {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+        .match-item:hover {
+            background-color: #f5f5f5;
+            cursor: pointer;
+        }
+        .selected {
+            background-color: #e3f2fd;
+            border-color: #2196f3;
+        }
+        .time-selection {
+            margin-top: 20px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            display: none;
+        }
+        .time-selection.active {
+            display: block;
+        }
+        .time-select {
+            width: 40%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        .submit-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .submit-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .back-button {
+            margin-bottom: 20px;
+            padding: 10px 20px;
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/dashboard" class="back-button">返回主頁</a>
+        
+        <h2>申請調賽</h2>
+        
+        <div class="match-list">
+            <h3>選擇要調賽的比賽</h3>
+            {% for match in matches %}
+            <div class="match-item" data-match-id="{{ match.id }}">
+                <p><strong>比賽時間：</strong>{{ match.match_time.strftime('%Y-%m-%d %H:%M') if match.match_time else '待定' }}</p>
+                <p><strong>隊伍：</strong>{{ match.team1.name }} vs {{ match.team2.name }}</p>
+                <p><strong>裁判：</strong>{{ match.referee.name }}</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="time-selection">
+            <h3>選擇新的比賽時間</h3>
+            <p>比賽期間：<span id="matchPeriod"></span></p>
+            <select class="time-select" id="timeSelect">
+                <option value="">請選擇時間</option>
+                <option value="TBD">待定</option>
+            </select>
+            <button class="submit-button" id="submitButton" disabled>發送調賽申請</button>
+        </div>
+    </div>
+
+    <script>
+        let selectedMatchId = null;
+        let selectedTime = null;
+
+        // 選擇比賽
+        document.querySelectorAll('.match-item').forEach(item => {
+            item.addEventListener('click', function() {
+                // 移除其他選中狀態
+                document.querySelectorAll('.match-item').forEach(i => i.classList.remove('selected'));
+                // 添加選中狀態
+                this.classList.add('selected');
+                
+                selectedMatchId = this.dataset.matchId;
+                // 顯示時間選擇區域
+                document.querySelector('.time-selection').classList.add('active');
+                // 獲取可用時間
+                fetchAvailableTimes(selectedMatchId);
+            });
+        });
+
+        // 獲取可用時間
+        function fetchAvailableTimes(matchId) {
+            fetch(`/api/available_times/${matchId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // 顯示比賽期間
+                        document.getElementById('matchPeriod').textContent = 
+                            `${data.period.start} 至 ${data.period.end}`;
+
+                        // 顯示可用時間
+                        const timeSelect = document.getElementById('timeSelect');
+                        timeSelect.innerHTML = '<option value="">請選擇時間</option><option value="TBD">待定</option>';
+                        
+                        data.available_times.forEach(time => {
+                            const option = document.createElement('option');
+                            option.value = time;
+                            option.textContent = new Date(time).toLocaleString('zh-TW', {
+                                year: 'numeric',
+                                month: '2-digit',
+                                day: '2-digit',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                hour12: false
+                            });
+                            timeSelect.appendChild(option);
+                        });
+
+                        // 添加選擇事件監聽器
+                        timeSelect.addEventListener('change', function() {
+                            selectedTime = this.value;
+                            document.getElementById('submitButton').disabled = !this.value;
+                        });
+                    } else {
+                        alert('無法獲取可用時間：' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching available times:', error);
+                    alert('獲取可用時間時發生錯誤');
+                });
+        }
+
+        // 提交調賽申請
+        document.getElementById('submitButton').addEventListener('click', function() {
+            if (!selectedMatchId || !selectedTime) {
+                alert('請選擇比賽和新的時間');
+                return;
+            }
+
+            fetch('/api/reschedule/request', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    match_id: selectedMatchId,
+                    requested_time: selectedTime
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('調賽申請已發送！');
+                    window.location.href = '/dashboard';
+                } else {
+                    alert('發送申請失敗：' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error submitting reschedule request:', error);
+                alert('發送申請時發生錯誤');
+            });
+        });
+    </script>
+</body>
+</html> 

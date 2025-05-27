@@ -103,3 +103,29 @@ class JoinRequest(db.Model):
 
     user = db.relationship('User', backref='join_request')
     team = db.relationship('Team', backref='join_requests')
+
+class RescheduleRequest(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    match_id = db.Column(db.Integer, db.ForeignKey('match.id'), nullable=False)
+    requester_team_id = db.Column(db.Integer, db.ForeignKey('team.id'), nullable=False)
+    requested_time = db.Column(db.DateTime, nullable=True)
+    status = db.Column(db.String(20), default='pending')  # pending, approved, rejected
+    requester_team_confirmed = db.Column(db.Boolean, default=True)  # 請求方隊長確認
+    opponent_team_confirmed = db.Column(db.Boolean, default=False)  # 對手隊長確認
+    referee_confirmed = db.Column(db.Boolean, default=False)  # 裁判確認
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # 關聯
+    match = db.relationship('Match', backref='reschedule_requests')
+    requester_team = db.relationship('Team', foreign_keys=[requester_team_id], backref='reschedule_requests')
+
+class AvailableTime(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    match_time = db.Column(db.DateTime, nullable=False)
+    team_type = db.Column(db.String(10), nullable=False)  # 男排/女排
+    is_used = db.Column(db.Boolean, default=False)  # 是否已被使用
+    match_id = db.Column(db.Integer, db.ForeignKey('match.id'), nullable=True)  # 如果被使用，關聯到對應的比賽
+
+    def __repr__(self):
+        return f'<AvailableTime {self.match_time}>'

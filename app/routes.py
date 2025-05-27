@@ -30,24 +30,11 @@ def login():
 @main.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        # 取得驗證碼結果
-        recaptcha_response = request.form.get('g-recaptcha-response')
-        secret_key = current_app.config.get('RECAPTCHA_SECRET_KEY')
-
-        # 驗證 reCAPTCHA
-        verify_url = 'https://www.google.com/recaptcha/api/siteverify'
-        payload = {'secret': secret_key, 'response': recaptcha_response}
-        r = requests.post(verify_url, data=payload)
-        result = r.json()
-
-        if not result.get('success'):
-            flash('驗證碼失敗，請勾選「我不是機器人」')
-            return redirect(url_for('main.register'))
 
         # 帳號建立流程
         username = request.form['username']
         password = request.form['password']
-        name = request.form['name']  # 若有 name 欄位
+        name = request.form['name']
 
         if User.query.filter_by(username=username).first():
             flash('帳號已存在，請使用其他名稱')
@@ -56,8 +43,8 @@ def register():
         hashed_pw = bcrypt.generate_password_hash(password).decode('utf-8')
         user = User(
             username=username,
-            name=name,
             password=hashed_pw,
+            name=name,
             role='visitor',  # 預設角色
         )
         db.session.add(user)
@@ -555,11 +542,21 @@ def referee_matches():
 
     return render_template('referee_match_list.html', matches=matches)
 
-# Dashboard 主頁（根據角色顯示）
 @main.route('/dashboard')
 @login_required
 def dashboard():
-    return render_template('dashboard.html', username=current_user.username)
+    total_teams = Team.query.count()
+    matches_played = Match.query.filter(Match.status == 'confirmed').count()
+    players_registered = User.query.count()
+    return render_template(
+        'dashboard.html',
+        username=current_user.username,
+        role=current_user.role,
+        name=current_user.name,
+        total_teams=total_teams,
+        matches_played=matches_played,
+        players_registered=players_registered
+    )
 
 # 登出
 @main.route('/logout')
@@ -674,15 +671,17 @@ def list_users():
     if role:
         query = query.filter(User.role == role)
     users = query.all()
+    all_users = User.query.all()
   
     return render_template(
         'list_users.html',
         users=users,
+        all_users=all_users,
         teams=teams,
         departments=departments,
-        team_type=team_type,
+        team_type=team_type,    
         team_id=team_id,
-        role=role
+        role=role,
         )
 
 
@@ -997,4 +996,217 @@ def get_available_times(match_id):
             'end': end_date.strftime('%Y-%m-%d'),
             'original_end': (end_date - timedelta(weeks=2)).strftime('%Y-%m-%d')
         }
+    }) 
+
+@main.route('/reschedule/request')
+@login_required
+def reschedule_request():
+    if current_user.role != 'captain' or not current_user.team:
+        flash("❌ 僅限隊長操作")
+        return redirect(url_for('main.dashboard'))
+
+    # 獲取該隊伍的所有比賽
+    matches = Match.query.filter(
+        (Match.team1_id == current_user.team.id) | (Match.team2_id == current_user.team.id)
+    ).order_by(Match.match_time).all()
+
+    return render_template('reschedule_request.html', matches=matches)
+
+@main.route('/api/reschedule/request', methods=['POST'])
+@login_required
+def create_reschedule_request():
+    if current_user.role != 'captain' or not current_user.team:
+        return jsonify({'success': False, 'message': '僅限隊長操作'}), 403
+
+    data = request.get_json()
+    match_id = data.get('match_id')
+    requested_time = data.get('requested_time')
+
+    if not match_id:
+        return jsonify({'success': False, 'message': '缺少必要資訊'}), 400
+
+    match = Match.query.get_or_404(match_id)
+    
+    # 確認是該隊伍的比賽
+    if match.team1_id != current_user.team.id and match.team2_id != current_user.team.id:
+        return jsonify({'success': False, 'message': '無權操作此比賽'}), 403
+
+    # 檢查是否已有待處理的調賽請求
+    existing_request = RescheduleRequest.query.filter_by(
+        match_id=match_id,
+        status='pending'
+    ).first()
+
+    if existing_request:
+        return jsonify({'success': False, 'message': '此比賽已有待處理的調賽請求'}), 400
+
+    # 創建新的調賽請求，並自動標記請求方為已確認
+    reschedule_request = RescheduleRequest(
+        match_id=match_id,
+        requester_team_id=current_user.team.id,
+        requested_time=datetime.strptime(requested_time, '%Y-%m-%dT%H:%M') if requested_time != 'TBD' else None,
+        requester_team_confirmed=True  # 自動標記請求方為已確認
+    )
+
+    db.session.add(reschedule_request)
+    db.session.commit()
+
+    return jsonify({'success': True})
+
+@main.route('/api/confirm_reschedule', methods=['POST'])
+@login_required
+def confirm_reschedule_request():
+    request_id = request.json.get('request_id')
+    if not request_id:
+        return jsonify({'error': '缺少申請ID'}), 400
+
+    reschedule_request = RescheduleRequest.query.get_or_404(request_id)
+    match = reschedule_request.match
+
+    # 檢查用戶是否有權限確認
+    if not current_user.team:
+        return jsonify({'error': '找不到隊伍資訊'}), 403
+
+    # 檢查用戶是否為參賽隊伍的隊長或裁判隊伍的隊長
+    is_captain = current_user.role == 'captain' and current_user.team.id in [match.team1_id, match.team2_id]
+    is_referee = current_user.role == 'captain' and current_user.team.id == match.referee_id
+
+    if not (is_captain or is_referee):
+        return jsonify({'error': '只有參賽隊伍或裁判隊伍的隊長可以確認'}), 403
+
+    # 更新確認狀態
+    if is_captain:
+        if current_user.team.id == reschedule_request.requester_team_id:
+            reschedule_request.requester_team_confirmed = True
+        else:
+            reschedule_request.opponent_team_confirmed = True
+    else:  # is_referee
+        reschedule_request.referee_confirmed = True
+
+    # 檢查是否所有相關方都已確認
+    if (reschedule_request.requester_team_confirmed and 
+        reschedule_request.opponent_team_confirmed and 
+        reschedule_request.referee_confirmed):
+        
+        # 更新比賽時間
+        old_time = match.match_time
+        new_time = reschedule_request.requested_time
+        
+        # 更新舊時間的可用狀態
+        if old_time:
+            old_available_time = AvailableTime.query.filter_by(
+                match_time=old_time,
+                team_type=match.team_type
+            ).first()
+            if old_available_time:
+                old_available_time.is_used = False
+                old_available_time.match_id = None
+        
+        # 更新新時間的可用狀態
+        if new_time:
+            new_available_time = AvailableTime.query.filter_by(
+                match_time=new_time,
+                team_type=match.team_type
+            ).first()
+            if new_available_time:
+                new_available_time.is_used = True
+                new_available_time.match_id = match.id
+        
+        match.match_time = new_time
+        reschedule_request.status = 'approved'
+
+    try:
+        db.session.commit()
+        return jsonify({
+            'success': True,
+            'match': {
+                'id': match.id,
+                'team1': match.team1.name,
+                'team2': match.team2.name,
+                'referee': match.referee.name,
+                'match_time': match.match_time.strftime('%Y-%m-%d %H:%M') if match.match_time else '待定'
+            },
+            'requested_time': reschedule_request.requested_time.strftime('%Y-%m-%d %H:%M') if reschedule_request.requested_time else '待定',
+            'requester_team': reschedule_request.requester_team.name,
+            'requester_team_confirmed': reschedule_request.requester_team_confirmed,
+            'opponent_team_confirmed': reschedule_request.opponent_team_confirmed,
+            'referee_confirmed': reschedule_request.referee_confirmed
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@main.route('/api/reschedule/reject/<int:request_id>', methods=['POST'])
+@login_required
+def reject_reschedule_request(request_id):
+    if current_user.role != 'captain' or not current_user.team:
+        return jsonify({'success': False, 'message': '僅限隊長操作'}), 403
+
+    reschedule_request = RescheduleRequest.query.get_or_404(request_id)
+    match = reschedule_request.match
+
+    # 確認是相關隊伍的隊長
+    if current_user.team.id not in [match.team1_id, match.team2_id, match.referee_id]:
+        return jsonify({'success': False, 'message': '無權操作此請求'}), 403
+
+    reschedule_request.status = 'rejected'
+    db.session.commit()
+
+    flash('❌ 已拒絕調賽申請')
+    return jsonify({'success': True})
+
+@main.route('/api/pending_reschedules')
+@login_required
+def get_pending_reschedules():
+    if current_user.role not in ['captain', 'referee']:
+        return jsonify({'error': '只有隊長和裁判可以查看調賽申請'}), 403
+
+    # 獲取當前用戶隊伍的所有待處理調賽申請
+    team = Team.query.filter_by(captain_id=current_user.id).first()
+    if not team:
+        return jsonify({'error': '找不到隊伍資訊'}), 404
+
+    # 獲取與該隊伍相關的所有待處理調賽申請
+    pending_requests = RescheduleRequest.query.filter(
+        or_(
+            RescheduleRequest.requester_team_id == team.id,
+            RescheduleRequest.match.has(or_(
+                Match.team1_id == team.id,
+                Match.team2_id == team.id,
+                Match.referee_id == team.id  # 添加裁判隊伍的條件
+            ))
+        ),
+        RescheduleRequest.status == 'pending'
+    ).all()
+
+    return jsonify({
+        'requests': [{
+            'id': request.id,
+            'match': {
+                'id': request.match.id,
+                'team1': {'id': request.match.team1.id, 'name': request.match.team1.name},
+                'team2': {'id': request.match.team2.id, 'name': request.match.team2.name},
+                'referee': {'id': request.match.referee.id, 'name': request.match.referee.name},
+                'match_time': request.match.match_time.strftime('%Y-%m-%d %H:%M') if request.match.match_time else '待定'
+            },
+            'requested_time': request.requested_time.strftime('%Y-%m-%d %H:%M') if request.requested_time else '待定',
+            'requester_team': {'id': request.requester_team.id, 'name': request.requester_team.name},
+            'status': request.status,
+            'requester_team_confirmed': request.requester_team_confirmed,
+            'opponent_team_confirmed': request.opponent_team_confirmed,
+            'referee_confirmed': request.referee_confirmed
+        } for request in pending_requests]
+    })
+
+@main.route('/api/current_user_team')
+@login_required
+def get_current_user_team():
+    if current_user.team:
+        return jsonify({
+            'success': True,
+            'team_id': current_user.team.id
+        })
+    return jsonify({
+        'success': False,
+        'team_id': None
     }) 

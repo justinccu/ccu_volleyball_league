@@ -46,7 +46,7 @@
 
 <body class="bg-gray-50 min-h-screen flex flex-col">
     <!-- Header -->
-    <header class="flex items-center justify-between border-b border-[#eaeef1] px-10 py-3 bg-white">
+    <header class="fixed top-0 left-0 w-full flex items-center justify-between border-b border-[#eaeef1] px-10 py-3 bg-white z-40 h-16">
         <div class="flex items-center gap-4 text-[#101518]">
             <svg viewBox="0 0 48 48" class="w-5 h-5" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M4 4H17.3334V17.3334H30.6666V30.6666H44V44H4V4Z" fill="currentColor"></path>
@@ -63,9 +63,9 @@
     </header>
 
     <!-- Main Layout -->
-    <div class="flex flex-1">
+    <div class="flex flex-1 h-screen overflow-hidden">
         <!-- Sidebar -->
-        <aside class="w-64 border-r border-[#eaeef1] p-4 bg-white">
+        <aside class="fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 border-r border-[#eaeef1] p-4 bg-white flex flex-col z-30">
             <div class="flex flex-col gap-2">
                 <button onclick="showForm('form-add-user')" data-form="form-add-user"
                     class="text-left flex items-center gap-2 px-3 py-2 rounded-full hover:bg-[#eaeef1]">
@@ -87,10 +87,17 @@
                     <span class="text-sm font-medium text-[#101518]">隊伍成員列表</span>
                 </button>
             </div>
+            <!-- 登出按鈕吸底 -->
+            <div class="mt-auto p-4">
+                <a href="{{ url_for('main.logout') }}"
+                    class="block w-full px-3 py-2 bg-blue-100 rounded-lg text-blue-900 hover:bg-blue-200 text-center">
+                    登出
+                </a>
+            </div>
         </aside>
 
         <!-- Main Content -->
-        <main class="flex-1 p-10 bg-gray-50">
+        <main class="flex-1 p-10 bg-gray-50 ml-64 pt-16 overflow-y-auto">
             <!-- 新增使用者表單 -->
             <div id="form-add-user" class="form-section hidden">
                 <div class="layout-content-container flex flex-col w-full max-w-none px-10">
@@ -223,7 +230,7 @@
                                 <label class="block font-medium text-[#101518] mb-1">選擇使用者</label>
                                 <select name="user_id" required
                                     class="w-full h-12 px-3 border border-[#d4dde2] rounded-xl bg-white text-[#101518]">
-                                    {% for u in users %}
+                                    {% for u in all_users %}
                                     {% if u.role != 'admin' and u.role != 'captain' %}
                                     <option value="{{ u.id }}">{{ u.name }} -- {{u.username}}({{ u.team.name if u.team
                                         else
@@ -261,29 +268,16 @@
                     <div class="px-4 py-3">
                         <form method="POST" action="{{ url_for('main.delete_team') }}"
                             onsubmit="return confirmDeleteTeam()">
-                            <!-- 隊伍類型 -->
-                            <div class="mb-4">
-                                <label class="block font-medium text-[#101518] mb-1">隊伍類型</label>
-                                <select id="team-type"
-                                    class="w-full h-12 px-3 border border-[#d4dde2] rounded-xl bg-white text-[#101518]"
-                                    onchange="showTeamSelect()" required>
-                                    <option value="">-- 請選擇隊伍類型 --</option>
-                                    <option value="男排">男排</option>
-                                    <option value="女排">女排</option>
-                                </select>
-                            </div>
-
                             <!-- 隊伍選擇 -->
-                            <div class="mb-4" id="team-select-container" style="display:none;">
+                            <div class="mb-4">
                                 <label class="block font-medium text-[#101518] mb-1">選擇要刪除的隊伍</label>
                                 <select name="team_id" id="team-select"
                                     class="w-full h-12 px-3 border border-[#d4dde2] rounded-xl bg-white text-[#101518]"
                                     required>
                                     <option value="">-- 請選擇隊伍 --</option>
+
                                     {% for team in teams %}
-                                    <option value="{{ team.id }}" data-type="{{ team.team_type }}">
-                                        {{ team.name }} ({{ team.team_type }})
-                                    </option>
+                                    <option value="{{ team.id }}">{{ team.name }}({{ team.team_type }})</option>
                                     {% endfor %}
                                 </select>
                             </div>
@@ -295,51 +289,6 @@
                                 </button>
                             </div>
                         </form>
-
-                        <script>
-                            function showTeamSelect() {
-                                const selectedType = document.getElementById('team-type').value;
-                                const teamSelectContainer = document.getElementById('team-select-container');
-                                const teamSelect = document.getElementById('team-select');
-                                let hasTeam = false;
-
-                                for (let i = 0; i < teamSelect.options.length; i++) {
-                                    const opt = teamSelect.options[i];
-                                    const type = opt.getAttribute('data-type');
-
-                                    if (opt.value === "") {
-                                        opt.style.display = ''; // 保留空選項
-                                        continue;
-                                    }
-
-                                    if (type === selectedType) {
-                                        opt.style.display = '';
-                                        hasTeam = true;
-                                    } else {
-                                        opt.style.display = 'none';
-                                    }
-                                }
-
-                                if (
-                                    teamSelect.selectedIndex > 0 &&
-                                    teamSelect.options[teamSelect.selectedIndex].style.display === 'none'
-                                ) {
-                                    teamSelect.selectedIndex = 0;
-                                }
-
-                                teamSelectContainer.style.display = hasTeam ? '' : 'none';
-                            }
-
-                            document.addEventListener('DOMContentLoaded', function () {
-                                const teamType = document.getElementById('team-type');
-                                if (teamType) {
-                                    teamType.addEventListener('change', showTeamSelect);
-                                    if (teamType.value) {
-                                        showTeamSelect();  // ✅ 預設選到男排或女排才顯示
-                                    }
-                                }
-                            });
-                        </script>
                     </div>
                 </div>
             </div>

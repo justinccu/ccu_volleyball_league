@@ -1,38 +1,75 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-Hant">
+
 <head>
-    <title>註冊</title>
-    <style>
-        .flash-message {
-            margin-top: 20px;
-        }
-        .text-red {
-            color: red;
-            font-weight: bold;
-        }
-        .text-green {
-            color: green;
-            font-weight: bold;
-        }
-    </style>
-    <!-- 引入 Google reCAPTCHA -->
-    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <meta charset="UTF-8" />
+    <title>註冊 - VolleyAdmin</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin />
+    <link rel="stylesheet" as="style" onload="this.rel='stylesheet'"
+        href="https://fonts.googleapis.com/css2?display=swap&family=Lexend:wght@400;500;700;900&family=Noto+Sans:wght@400;500;700;900" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 </head>
+
 <body>
-    <h2>註冊新帳號</h2>
+    <div class="relative flex size-full min-h-screen flex-col bg-gray-50 overflow-x-hidden"
+        style='font-family: Lexend, "Noto Sans", sans-serif;'>
+        <div class="layout-container flex h-full grow flex-col">
+            <header class="flex items-center justify-between border-b border-[#eaedf1] px-10 py-3">
+                <div class="flex items-center gap-4 text-[#101418]">
+                    <div class="size-4">
+                        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M44 4H30.6666V17.3334H17.3334V30.6666H4V44H44V4Z" fill="currentColor"></path>
+                        </svg>
+                    </div>
+                    <h2 class="text-lg font-bold tracking-[-0.015em]">中正排球聯盟</h2>
+                </div>
+            </header>
 
-    <form method="POST">
-        帳號: <input name="username" required><br>
-        密碼: <input type="password" name="password" required><br>
+            <div class="px-4 md:px-40 flex flex-1 justify-center py-10">
+                <form method="POST" action="{{ url_for('main.register') }}"
+                    class="flex flex-col w-full max-w-[512px] bg-white shadow-sm rounded-xl py-5 px-6">
+                    <h2 class="text-[#101418] text-[28px] font-bold text-center mb-6">創建帳號</h2>
 
-        <!-- reCAPTCHA 驗證框 -->
-        <div class="g-recaptcha" data-sitekey="{{ config['RECAPTCHA_SITE_KEY'] }}"></div>
-        <br>
+                    {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                    <div class="text-red-500 text-sm font-semibold text-center mb-3">
+                        {% for message in messages %}
+                        <div>{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    {% endwith %}
 
-        <button type="submit">註冊</button>
-    </form>
+                    <label class="mb-4">
+                        <p class="text-[#101418] text-base font-medium pb-2">Username</p>
+                        <input type="text" name="username" required placeholder="Enter your username"
+                            class="form-input w-full rounded-xl bg-[#eaedf1] text-[#101418] h-14 p-4 placeholder-[#5c718a]" />
+                    </label>
 
-    <br>
-    <a href="/login">已有帳號？登入</a>
+                    <label class="mb-4">
+                        <p class="text-[#101418] text-base font-medium pb-2">Password</p>
+                        <input type="password" name="password" required placeholder="Enter your password"
+                            class="form-input w-full rounded-xl bg-[#eaedf1] text-[#101418] h-14 p-4 placeholder-[#5c718a]" />
+                    </label>
+
+                    <label class="mb-6">
+                        <p class="text-[#101418] text-base font-medium pb-2">Name</p>
+                        <input type="text" name="name" required placeholder="Enter your name"
+                            class="form-input w-full rounded-xl bg-[#eaedf1] text-[#101418] h-14 p-4 placeholder-[#5c718a]" />
+                    </label>
+
+                    <button type="submit"
+                        class="h-12 bg-[#b2cae5] text-[#101418] font-bold rounded-xl text-sm tracking-wide w-full">Sign
+                        Up</button>
+
+                    <p class="text-center text-sm text-[#5c718a] mt-4">
+                        Already have an account?
+                        <a href="{{ url_for('main.login') }}" class="text-blue-600 hover:underline">Sign in</a>
+                    </p>
+                </form>
+            </div>
+        </div>
+    </div>
 </body>
+
 </html>
