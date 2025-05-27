@@ -1,752 +1,120 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-Hant" class="h-full w-full">
+
 <head>
-    <title>主頁</title>
-    <style>
-        .flash-message {
-            margin-top: 20px;
-        }
-        .text-red {
-            color: red;
-            font-weight: bold;
-        }
-        .text-green {
-            color: green;
-            font-weight: bold;
-        }
-        .schedule-table {
-            width: 50%;
-            border-collapse: collapse;
-            margin: 20px 0;
-        }
-        .schedule-table th, .schedule-table td {
-            border: 1px solid #ddd;
-            padding: 12px;
-            text-align: left;
-        }
-        .schedule-table th {
-            background-color: #f5f5f5;
-        }
-        .schedule-table tr:hover {
-            background-color: #f9f9f9;
-            cursor: pointer;
-        }
-        /* Modal styles */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
-        }
-        .modal-content {
-            background-color: #fefefe;
-            margin: 15% auto;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 80%;
-            max-width: 500px;
-            border-radius: 8px;
-            position: relative;
-        }
-        .close-button {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        .close-button:hover {
-            color: black;
-        }
-        .edit-button {
-            background-color: #4CAF50;
-            color: white;
-            padding: 5px 10px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        .edit-button:hover {
-            background-color: #45a049;
-        }
-        /* Filter styles */
-        .filter-section {
-            margin: 20px 0;
-            padding: 15px;
-            background-color: #f8f9fa;
-            border-radius: 8px;
-            border: 1px solid #ddd;
-        }
-        .filter-group {
-            margin-bottom: 10px;
-        }
-        .filter-group label {
-            margin-right: 10px;
-            font-weight: bold;
-        }
-        .filter-group select {
-            padding: 5px;
-            border-radius: 4px;
-            border: 1px solid #ddd;
-        }
-        .filter-buttons {
-            margin-top: 10px;
-        }
-        .filter-buttons button {
-            padding: 5px 15px;
-            margin-right: 10px;
-            border-radius: 4px;
-            border: 1px solid #ddd;
-            background-color: #fff;
-            cursor: pointer;
-        }
-        .filter-buttons button:hover {
-            background-color: #f0f0f0;
-        }
-        .filter-buttons button.active {
-            background-color: #007bff;
-            color: white;
-            border-color: #0056b3;
-        }
-        .confirmed-text {
-            color: #28a745;
-            font-weight: bold;
-            margin: 0;
-            padding: 5px 10px;
-        }
-        .rejected-text {
-            color: #dc3545;
-            font-weight: bold;
-            margin: 0;
-            padding: 5px 10px;
-        }
-        .reschedule-request {
-            margin-bottom: 15px;
-            padding: 15px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            background-color: #f8f9fa;
-        }
-        .request-info {
-            margin-bottom: 10px;
-        }
-        .request-actions {
-            display: flex;
-            gap: 10px;
-        }
-        .request-actions button {
-            padding: 5px 15px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        .request-actions button:first-child {
-            background-color: #28a745;
-            color: white;
-        }
-        .request-actions button:last-child {
-            background-color: #dc3545;
-            color: white;
-        }
-    </style>
+    <meta charset="utf-8" />
+    <title>中正排球聯盟</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="" />
+    <link rel="stylesheet" as="style" onload="this.rel='stylesheet'"
+        href="https://fonts.googleapis.com/css2?display=swap&family=Lexend:wght@400;500;700;900&family=Noto+Sans:wght@400;500;700;900" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 </head>
-<body>
-    <h1>中正排球聯盟</h1>
 
-    <h2>歡迎, {{ current_user.name }}!</h2>
-    <p>這裡將顯示你的比賽與帳號管理功能</p>
+<body class="h-full w-full bg-slate-50" style='font-family: Lexend, "Noto Sans", sans-serif;'>
+    <div class="flex h-full w-full min-h-screen">
+        <!-- Sidebar -->
+        <aside class="w-80 min-h-screen h-full bg-slate-50 flex flex-col border-r border-[#e5e7eb]">
+            <div>
+                <div class="flex flex-col gap-4 p-4 pb-2">
+                    <div>
+                        <h1 class="text-[#0e141b] text-base font-medium leading-normal">中正排球聯盟</h1>
+                        <p class="text-[#4e7097] text-sm font-normal leading-normal">{{current_user.role}}</p>
+                    </div>
+                    <nav>
+                        <div class="flex flex-col gap-2">
+                            <button class="text-left flex items-center gap-2 px-3 py-2 rounded-full bg-[#eaeef1]">
+                                <span class="text-sm font-medium text-[#101518]">Dashboard</span>
+                            </button>
 
-    <!-- 賽程表部分 -->
-    <h3>賽程表</h3>
-    
-    <!-- 篩選控制項 -->
-    <div class="filter-section">
-        <div class="filter-group">
-            <label>比賽類型：</label>
-            <select id="teamTypeFilter">
-                <option value="all">全部</option>
-                <option value="男排">男排</option>
-                <option value="女排">女排</option>
-            </select>
-        </div>
-        <div class="filter-group">
-            <label>隊伍：</label>
-            <select id="teamFilter">
-                <option value="all">全部隊伍</option>
-            </select>
-        </div>
-        <div class="filter-group">
-            <label>狀態：</label>
-            <select id="statusFilter">
-                <option value="all">全部狀態</option>
-                <option value="尚未開始">尚未開始</option>
-                <option value="進行中">進行中</option>
-                <option value="已結束">已結束</option>
-            </select>
-        </div>
-        <div class="filter-buttons">
-            <button onclick="applyFilters()">套用篩選</button>
-            <button onclick="resetFilters()">重置篩選</button>
-        </div>
-    </div>
+                            <button class="text-left flex items-center gap-2 px-3 py-2 rounded-full hover:bg-[#eaeef1]">
+                                <span class="text-sm font-medium text-[#101518]">Teams</span>
+                            </button>
 
-    <table class="schedule-table">
-        <thead>
-            <tr>
-                <th>比賽時間</th>
-                <th>類型</th>
-                <th>隊伍1</th>
-                <th>隊伍2</th>
-                <th>狀態</th>
+                            <a href="{{ url_for('main.matches_page') }}">
+                                <button
+                                    class="text-left flex items-center gap-2 px-3 py-2 rounded-full hover:bg-[#eaeef1]">
+                                    <span class="text-sm font-medium text-[#101518]">Matches</span>
+                                </button>
+                            </a>
+
+                            <button class="text-left flex items-center gap-2 px-3 py-2 rounded-full hover:bg-[#eaeef1]">
+                                <span class="text-sm font-medium text-[#101518]">Settings</span>
+                            </button>
+                        </div>
+                    </nav>
+                </div>
+            </div>
+            <div class="p-4 mt-auto">
+                <a href="{{ url_for('main.logout') }}"
+                    class="w-full px-3 py-2 bg-blue-100 rounded-lg text-blue-900 hover:bg-blue-200">登出</a>
+            </div>
+        </aside>
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col h-full min-h-screen bg-white">
+            <div class="flex flex-wrap justify-between gap-3 p-8 pt-6">
+                <div class="flex min-w-72 flex-col gap-3">
+                    <p class="text-[#0e141b] tracking-light text-[32px] font-bold leading-tight">Dashboard</p>
+                    <p class="text-[#4e7097] text-sm font-normal leading-normal">Welcome back, {{current_user.name}}</p>
+                </div>
+            </div>
+            <h2 class="text-[#0e141b] text-[22px] font-bold leading-tight tracking-[-0.015em] px-8 pb-3 pt-2">League
+                Overview</h2>
+            <div class="flex flex-wrap gap-4 px-8">
+                <div class="flex min-w-[158px] flex-1 flex-col gap-2 rounded-xl p-6 border border-[#d0dbe7]">
+                    <p class="text-[#0e141b] text-base font-medium leading-normal">Total Teams</p>
+                    <p class="text-[#0e141b] tracking-light text-2xl font-bold leading-tight">{{ total_teams }}</p>
+                </div>
+                <div class="flex min-w-[158px] flex-1 flex-col gap-2 rounded-xl p-6 border border-[#d0dbe7]">
+                    <p class="text-[#0e141b] text-base font-medium leading-normal">Matches Played</p>
+                    <p class="text-[#0e141b] tracking-light text-2xl font-bold leading-tight">{{ matches_played }}</p>
+                </div>
+                <div class="flex min-w-[158px] flex-1 flex-col gap-2 rounded-xl p-6 border border-[#d0dbe7]">
+                    <p class="text-[#0e141b] text-base font-medium leading-normal">Players Registered</p>
+                    <p class="text-[#0e141b] tracking-light text-2xl font-bold leading-tight">{{ players_registered }}
+                    </p>
+                </div>
+            </div>
+            <h2 class="text-[#0e141b] text-[22px] font-bold leading-tight tracking-[-0.015em] px-8 pb-3 pt-5">Quick
+                Actions</h2>
+            <div class="flex flex-1 gap-3 flex-wrap px-8 py-3 justify-start">
                 {% if current_user.role == 'admin' %}
-                <th>操作</th>
+                <a href="{{ url_for('main.draw_teams') }}">
+                    <button
+                        class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#1978e5] text-slate-50 text-sm font-bold leading-normal tracking-[0.015em]">
+                        <span class="truncate">分組抽籤</span>
+                    </button>
+                </a>
                 {% endif %}
-            </tr>
-        </thead>
-        <tbody id="scheduleTableBody">
-            <!-- 動態填充內容 -->
-        </tbody>
-    </table>
-
-    <!-- Modal -->
-    <div id="matchModal" class="modal">
-        <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <div class="modal-header">
-                <h3>比賽詳細資訊</h3>
+                <button
+                    class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#e7edf3] text-[#0e141b] text-sm font-bold leading-normal tracking-[0.015em]">
+                    <span class="truncate">Register Team</span>
+                </button>
             </div>
-            <div class="modal-body" id="modalContent">
-                <!-- 動態填充內容 -->
+            <h2 class="text-[#0e141b] text-[22px] font-bold leading-tight tracking-[-0.015em] px-8 pb-3 pt-5">
+                Notifications</h2>
+            <div class="flex flex-col gap-2 px-8 pb-10">
+                <div class="flex items-center gap-4 bg-slate-50 px-4 min-h-[72px] py-2">
+                    <div
+                        class="text-[#0e141b] flex items-center justify-center rounded-lg bg-[#e7edf3] shrink-0 size-12">
+                        <!-- Calendar Icon -->
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor"
+                            viewBox="0 0 256 256">
+                            <path
+                                d="M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM72,48v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V80H48V48ZM208,208H48V96H208V208Zm-96-88v64a8,8,0,0,1-16,0V132.94l-4.42,2.22a8,8,0,0,1-7.16-14.32l16-8A8,8,0,0,1,112,120Zm59.16,30.45L152,176h16a8,8,0,0,1,0,16H136a8,8,0,0,1-6.4-12.8l28.78-38.37A8,8,0,1,0,145.07,132a8,8,0,1,1-13.85-8A24,24,0,0,1,176,136,23.76,23.76,0,0,1,171.16,150.45Z">
+                            </path>
+                        </svg>
+                    </div>
+                    <div class="flex flex-col justify-center">
+                        <p class="text-[#0e141b] text-base font-medium leading-normal line-clamp-1">Match Rescheduled
+                        </p>
+                        <p class="text-[#4e7097] text-sm font-normal leading-normal line-clamp-2">Match between Team A
+                            and Team B has been rescheduled.</p>
+                    </div>
+                </div>
             </div>
-        </div>
+        </main>
     </div>
-
-    <!-- 編輯比賽資訊的 Modal -->
-    <div id="editMatchModal" class="modal">
-        <div class="modal-content">
-            <span class="close-button" onclick="closeEditModal()">&times;</span>
-            <h3>編輯比賽資訊</h3>
-            <form id="editMatchForm">
-                <input type="hidden" id="editMatchId">
-                <div>
-                    <label>比賽期間：</label>
-                    <span id="matchPeriod"></span>
-                    <br>
-                    <small style="color: #666;">（含兩週調整緩衝期）</small>
-                </div>
-                <div>
-                    <label>比賽時間：</label>
-                    <select id="editMatchTime">
-                        <option value="">請選擇時間</option>
-                        <option value="TBD">待定</option>
-                    </select>
-                </div>
-                <div>
-                    <label>第一局比分：</label>
-                    <input type="number" id="editTeam1Set1"> : 
-                    <input type="number" id="editTeam2Set1">
-                </div>
-                <div>
-                    <label>第二局比分：</label>
-                    <input type="number" id="editTeam1Set2"> : 
-                    <input type="number" id="editTeam2Set2">
-                </div>
-                <div>
-                    <label>第三局比分：</label>
-                    <input type="number" id="editTeam1Set3"> : 
-                    <input type="number" id="editTeam2Set3">
-                </div>
-                <div>
-                    <label>燈錢(主隊):</label>
-                    <input type="number" id="editTeam1LampFee">
-                </div>
-                <div>
-                    <label>燈錢(客隊):</label>
-                    <input type="number" id="editTeam2LampFee">
-                </div>
-                <div>
-                    <label>狀態：</label>
-                    <select id="editMatchStatus" required>
-                        <option value="pending">尚未開始</option>
-                        <option value="waiting_confirm">等待確認</option>
-                        <option value="confirmed">已確認</option>
-                        <option value="rejected">已拒絕</option>
-                    </select>
-                </div>
-                <div style="margin-top: 20px; text-align: right;">
-                    <button type="button" onclick="closeEditModal()" style="margin-right: 10px; padding: 5px 15px; background-color: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">取消</button>
-                    <button type="submit" class="edit-button">保存修改</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    {% if current_user.role == 'admin' %}
-        <h3>⚙️ 管理員操作面板</h3>
-        <ul>
-            <li><a href="/admin/users">使用者管理</a></li>
-            <li><a href="/admin/draw_teams">分組抽籤</a></li>
-            <li><a href="/team/list">隊伍成員查詢</a></li>
-        </ul>
-    {% endif %}
-
-    {% if current_user.role in ['captain', 'member'] %}
-        <h3>我的比賽</h3>
-        <a href="/my/matches"><button>查看我的比賽</button></a>
-
-        <h3>我的隊伍成員</h3>
-        <a href="/my/team_members"><button>查看成員列表</button></a>
-    {% endif %}
-
-    {% if current_user.role == 'captain' %}
-        <h3>入隊申請審核</h3>
-        <a href="/captain/requests"><button>查看待審核申請</button></a>
-
-        <h3>裁判登錄比賽結果</h3>
-        <a href="/referee/matches"><button>我要登錄成績</button></a>
-
-        <h3>調賽申請</h3>
-        <a href="/reschedule/request"><button>申請調賽</button></a>
-
-        <h3>待處理的調賽申請</h3>
-        <div id="pending-reschedules">
-            <!-- 動態填充內容 -->
-        </div>
-    {% endif %}
-
-    {% if current_user.role == 'visitor' %}
-        <h3>加入隊伍</h3>
-        <a href="/join/request"><button>申請加入隊伍</button></a>
-    {% endif %}
-
-    <br><br>
-    <a href="/logout">登出</a>
-
-    <script>
-        // 獲取 modal 元素
-        const modal = document.getElementById('matchModal');
-        const modalContent = document.getElementById('modalContent');
-        const closeButton = document.getElementsByClassName('close-button')[0];
-        let allMatches = []; // 存儲所有比賽數據
-
-        // 關閉 modal 的函數
-        function closeModal() {
-            modal.style.display = 'none';
-        }
-
-        // 點擊關閉按鈕時關閉 modal
-        closeButton.onclick = closeModal;
-
-        // 點擊 modal 外部時關閉 modal
-        window.onclick = function(event) {
-            if (event.target == modal) {
-                closeModal();
-            }
-        }
-
-        // 更新隊伍選項
-        function updateTeamOptions(matches) {
-            const teamFilter = document.getElementById('teamFilter');
-            const teams = new Set();
-            
-            matches.forEach(match => {
-                teams.add(match.home_team);
-                teams.add(match.away_team);
-            });
-            
-            // 清空現有選項（保留"全部隊伍"選項）
-            while (teamFilter.options.length > 1) {
-                teamFilter.remove(1);
-            }
-            
-            // 添加隊伍選項
-            Array.from(teams).sort().forEach(team => {
-                const option = document.createElement('option');
-                option.value = team;
-                option.textContent = team;
-                teamFilter.appendChild(option);
-            });
-        }
-
-        // 套用篩選
-        function applyFilters() {
-            const teamType = document.getElementById('teamTypeFilter').value;
-            const team = document.getElementById('teamFilter').value;
-            const status = document.getElementById('statusFilter').value;
-            
-            const filteredMatches = allMatches.filter(match => {
-                const matchTeamType = teamType === 'all' || match.team_type === teamType;
-                const matchTeam = team === 'all' || match.home_team === team || match.away_team === team;
-                const matchStatus = status === 'all' || match.status === status;
-                
-                return matchTeamType && matchTeam && matchStatus;
-            });
-            
-            displayMatches(filteredMatches);
-        }
-
-        // 重置篩選
-        function resetFilters() {
-            document.getElementById('teamTypeFilter').value = 'all';
-            document.getElementById('teamFilter').value = 'all';
-            document.getElementById('statusFilter').value = 'all';
-            displayMatches(allMatches);
-        }
-
-        // 顯示比賽列表
-        function displayMatches(matches) {
-            const tbody = document.getElementById('scheduleTableBody');
-            tbody.innerHTML = '';
-            
-            matches.forEach(match => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${match.time}</td>
-                    <td>${match.team_type}</td>
-                    <td>${match.home_team}</td>
-                    <td>${match.away_team}</td>
-                    <td>${match.status}</td>
-                    {% if current_user.role == 'admin' %}
-                    <td>
-                        <button class="edit-button" onclick="openEditModal(${match.id})">編輯</button>
-                    </td>
-                    {% endif %}
-                `;
-                
-                // 為每一列添加點擊事件，但排除編輯按鈕那一欄
-                row.addEventListener('click', (event) => {
-                    // 如果點擊的是編輯按鈕或其父元素，則不觸發詳細資訊
-                    if (event.target.closest('.edit-button')) {
-                        return;
-                    }
-                    showMatchDetails(match);
-                });
-                
-                tbody.appendChild(row);
-            });
-        }
-
-        // 更新賽程表的函數
-        function updateSchedule() {
-            fetch('/api/matches')
-                .then(response => response.json())
-                .then(data => {
-                    allMatches = data; // 保存所有比賽數據
-                    updateTeamOptions(data); // 更新隊伍選項
-                    displayMatches(data); // 顯示所有比賽
-                })
-                .catch(error => console.error('Error fetching matches:', error));
-        }
-
-        // 顯示比賽詳細資訊的函數
-        function showMatchDetails(match) {
-            modalContent.innerHTML = `
-                <p><strong>比賽時間：</strong>${match.time}</p>
-                <p><strong>比賽類型：</strong>${match.team_type}</p>
-                <p><strong>隊伍1:</strong>${match.home_team}</p>
-                <p><strong>隊伍2:</strong>${match.away_team}</p>
-                <p><strong>比分:</strong>${match.score || '尚未開始'}</p>
-                <p><strong>裁判:</strong>${match.referee || '待定'}</p>
-            `;
-            modal.style.display = 'block';
-        }
-
-        // 關閉編輯 Modal
-        function closeEditModal() {
-            document.getElementById('editMatchModal').style.display = 'none';
-            // 重置表單
-            document.getElementById('editMatchForm').reset();
-        }
-
-        // 打開編輯 Modal
-        function openEditModal(matchId) {
-            // 先獲取可用時間
-            fetch(`/api/available_times/${matchId}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // 顯示比賽期間
-                        const periodElement = document.getElementById('matchPeriod');
-                        periodElement.innerHTML = `${data.period.start} 至 ${data.period.end}<br>` +
-                            `<small style="color: #666;">（原始結束日期：${data.period.original_end}）</small>`;
-
-                        const timeSelect = document.getElementById('editMatchTime');
-                        timeSelect.innerHTML = '<option value="">請選擇時間</option><option value="TBD">待定</option>';
-                        
-                        data.available_times.forEach(time => {
-                            const option = document.createElement('option');
-                            option.value = time;
-                            option.textContent = new Date(time).toLocaleString('zh-TW', {
-                                year: 'numeric',
-                                month: '2-digit',
-                                day: '2-digit',
-                                hour: '2-digit',
-                                minute: '2-digit',
-                                hour12: false
-                            });
-                            timeSelect.appendChild(option);
-                        });
-                    } else {
-                        alert('無法獲取可用時間：' + data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching available times:', error);
-                    alert('獲取可用時間時發生錯誤');
-                });
-
-            // 獲取比賽資訊
-            fetch(`/api/match/${matchId}`)
-                .then(response => response.json())
-                .then(match => {
-                    document.getElementById('editMatchId').value = match.id;
-                    if (match.time) {
-                        const timeSelect = document.getElementById('editMatchTime');
-                        const currentTime = match.time.replace(' ', 'T');
-                        // 如果當前時間不在選項中，添加它
-                        if (!Array.from(timeSelect.options).some(option => option.value === currentTime)) {
-                            const option = document.createElement('option');
-                            option.value = currentTime;
-                            option.textContent = new Date(currentTime).toLocaleString('zh-TW', {
-                                year: 'numeric',
-                                month: '2-digit',
-                                day: '2-digit',
-                                hour: '2-digit',
-                                minute: '2-digit',
-                                hour12: false
-                            });
-                            timeSelect.appendChild(option);
-                        }
-                        timeSelect.value = currentTime;
-                    }
-                    document.getElementById('editTeam1Set1').value = match.team1_set1 || '';
-                    document.getElementById('editTeam2Set1').value = match.team2_set1 || '';
-                    document.getElementById('editTeam1Set2').value = match.team1_set2 || '';
-                    document.getElementById('editTeam2Set2').value = match.team2_set2 || '';
-                    document.getElementById('editTeam1Set3').value = match.team1_set3 || '';
-                    document.getElementById('editTeam2Set3').value = match.team2_set3 || '';
-                    document.getElementById('editTeam1LampFee').value = match.team1_lamp_fee || '';
-                    document.getElementById('editTeam2LampFee').value = match.team2_lamp_fee || '';
-                    document.getElementById('editMatchStatus').value = match.status;
-                    
-                    document.getElementById('editMatchModal').style.display = 'block';
-                })
-                .catch(error => {
-                    console.error('Error fetching match details:', error);
-                    alert('獲取比賽資訊時發生錯誤');
-                });
-        }
-
-        // 提交編輯表單
-        document.getElementById('editMatchForm').onsubmit = function(e) {
-            e.preventDefault();
-            
-            const matchId = document.getElementById('editMatchId').value;
-            const formData = {};
-
-            // 只添加有值的欄位
-            const matchTime = document.getElementById('editMatchTime').value;
-            if (matchTime) formData.match_time = matchTime;
-
-            const team1Set1 = document.getElementById('editTeam1Set1').value;
-            if (team1Set1) formData.team1_set1 = team1Set1;
-
-            const team2Set1 = document.getElementById('editTeam2Set1').value;
-            if (team2Set1) formData.team2_set1 = team2Set1;
-
-            const team1Set2 = document.getElementById('editTeam1Set2').value;
-            if (team1Set2) formData.team1_set2 = team1Set2;
-
-            const team2Set2 = document.getElementById('editTeam2Set2').value;
-            if (team2Set2) formData.team2_set2 = team2Set2;
-
-            const team1Set3 = document.getElementById('editTeam1Set3').value;
-            if (team1Set3) formData.team1_set3 = team1Set3;
-
-            const team2Set3 = document.getElementById('editTeam2Set3').value;
-            if (team2Set3) formData.team2_set3 = team2Set3;
-
-            const team1LampFee = document.getElementById('editTeam1LampFee').value;
-            if (team1LampFee) formData.team1_lamp_fee = team1LampFee;
-
-            const team2LampFee = document.getElementById('editTeam2LampFee').value;
-            if (team2LampFee) formData.team2_lamp_fee = team2LampFee;
-
-            const status = document.getElementById('editMatchStatus').value;
-            if (status) formData.status = status;
-
-            fetch(`/api/match/${matchId}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(formData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('修改成功！');
-                    document.getElementById('editMatchModal').style.display = 'none';
-                    updateSchedule();
-                } else {
-                    alert('修改失敗：' + data.message);
-                }
-            });
-        };
-
-        // 添加全局變數來存儲當前用戶的隊伍 ID
-        let currentUserTeamId = null;
-
-        // 在頁面載入時獲取當前用戶的隊伍 ID
-        function getCurrentUserTeamId() {
-            return fetch('/api/current_user_team')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        currentUserTeamId = data.team_id;
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching user team:', error);
-                });
-        }
-
-        // 獲取待處理的調賽申請
-        function fetchPendingReschedules() {
-            fetch('/api/pending_reschedules')
-                .then(response => response.json())
-                .then(data => {
-                    const container = document.getElementById('pending-reschedules');
-                    container.innerHTML = '';
-                    
-                    if (!data.requests || data.requests.length === 0) {
-                        container.innerHTML = '<p>目前沒有待處理的調賽申請</p>';
-                        return;
-                    }
-
-                    data.requests.forEach(request => {
-                        const div = document.createElement('div');
-                        div.className = 'reschedule-request';
-                        div.setAttribute('data-request-id', request.id);
-                        
-                        // 判斷當前用戶的隊伍是否為請求方
-                        const isRequester = currentUserTeamId && request.requester_team.id === currentUserTeamId;
-                        
-                        // 判斷當前用戶的隊伍是否為對手方
-                        const isOpponent = currentUserTeamId && 
-                            (request.match.team1.id === currentUserTeamId || request.match.team2.id === currentUserTeamId) &&
-                            !isRequester;
-                        
-                        // 判斷當前用戶的隊伍是否為裁判
-                        const isReferee = currentUserTeamId && 
-                            request.match.referee_id === currentUserTeamId;
-                        
-                        // 根據角色判斷是否已確認
-                        let isConfirmed = false;
-                        if (isRequester) {
-                            isConfirmed = request.requester_team_confirmed;
-                        } else if (isOpponent) {
-                            isConfirmed = request.opponent_team_confirmed;
-                        } else if (isReferee) {
-                            isConfirmed = request.referee_confirmed;
-                        }
-
-                        div.innerHTML = `
-                            <div class="request-info">
-                                <p>比賽：${request.match.team1.name} vs ${request.match.team2.name}</p>
-                                <p>原定時間：${request.match.match_time}</p>
-                                <p>申請時間：${request.requested_time}</p>
-                                <p>申請隊伍：${request.requester_team.name}</p>
-                                <p>狀態：${request.status === 'pending' ? '待確認' : request.status === 'approved' ? '已通過' : '已拒絕'}</p>
-                            </div>
-                            ${!isRequester && request.status === 'pending' ? `
-                                <div class="request-actions">
-                                    ${!isConfirmed ? `
-                                        <button onclick="confirmReschedule(${request.id})">同意</button>
-                                        <button onclick="rejectReschedule(${request.id})">拒絕</button>
-                                    ` : `
-                                        <p class="confirmed-text">已確認</p>
-                                    `}
-                                </div>
-                            ` : ''}
-                        `;
-                        container.appendChild(div);
-                    });
-                })
-                .catch(error => {
-                    console.error('Error fetching pending reschedules:', error);
-                    document.getElementById('pending-reschedules').innerHTML = 
-                        '<p>載入調賽申請時發生錯誤</p>';
-                });
-        }
-
-        // 添加確認和拒絕的處理函數
-        function confirmReschedule(requestId) {
-            fetch('/api/confirm_reschedule', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ request_id: requestId })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // 更新特定請求的顯示
-                    const requestElement = document.querySelector(`[data-request-id="${requestId}"]`);
-                    if (requestElement) {
-                        const actionsDiv = requestElement.querySelector('.request-actions');
-                        if (actionsDiv) {
-                            actionsDiv.innerHTML = '<p class="confirmed-text">已確認</p>';
-                        }
-                    }
-                } else {
-                    alert('確認調賽申請失敗：' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error confirming reschedule:', error);
-                alert('確認調賽申請時發生錯誤');
-            });
-        }
-
-        function rejectReschedule(requestId) {
-            fetch(`/api/reschedule/reject/${requestId}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // 更新特定請求的顯示
-                    const requestElement = document.querySelector(`[data-request-id="${requestId}"]`);
-                    if (requestElement) {
-                        const actionsDiv = requestElement.querySelector('.request-actions');
-                        if (actionsDiv) {
-                            actionsDiv.innerHTML = '<p class="rejected-text">已拒絕</p>';
-                        }
-                    }
-                } else {
-                    alert('拒絕調賽申請失敗：' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error rejecting reschedule:', error);
-                alert('拒絕調賽申請時發生錯誤');
-            });
-        }
-
-        // 初始載入
-        getCurrentUserTeamId().then(() => {
-            updateSchedule();
-            fetchPendingReschedules();
-        });
-    </script>
 </body>
+
 </html>

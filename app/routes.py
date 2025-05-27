@@ -790,6 +790,14 @@ def edit_profile():
         return redirect(url_for('main.dashboard'))
     return render_template('edit_profile.html', user=user, departments=departments)
 
+
+@main.route('/matches')
+@login_required
+def matches_page():
+    # 直接渲染 templates/schedule_table.html
+    return render_template('schedule_table.html')
+
+
 @main.route('/api/matches')
 @login_required
 def get_matches():
