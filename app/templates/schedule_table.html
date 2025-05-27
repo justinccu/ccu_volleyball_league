@@ -89,22 +89,85 @@
 
 
             <!-- Schedule Table -->
-            <div class="px-8 py-6 overflow-x-auto">
-                <table class="min-w-full divide-y divide-[#e5e7eb]">
-                    <thead class="bg-[#f5f5f5]">
-                        <tr>
-                            <th class="px-4 py-2 text-left text-sm font-medium text-[#0e141b]">比賽時間</th>
-                            <th class="px-4 py-2 text-left text-sm font-medium text-[#0e141b]">類型</th>
-                            <th class="px-4 py-2 text-left text-sm font-medium text-[#0e141b]">隊伍 1</th>
-                            <th class="px-4 py-2 text-left text-sm font-medium text-[#0e141b]">隊伍 2</th>
-                            <th class="px-4 py-2 text-left text-sm font-medium text-[#0e141b]">狀態</th>
-                        </tr>
-                    </thead>
-                    <tbody id="scheduleTableBody" class="bg-white divide-y divide-[#e5e7eb]">
-                        <!-- JS 動態填充 -->
-                    </tbody>
-                </table>
+            <div class="px-4 py-3 @container">
+                <div class="overflow-hidden rounded-xl border border-[#d4dbe2] bg-gray-50">
+                    <table class="min-w-[800px] divide-y divide-[#d4dbe2] bg-white">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th
+                                    class="table-col-120 w-[200px] px-4 py-3 text-left text-sm font-medium text-[#101418]">
+                                    比賽時間</th>
+                                <th
+                                    class="table-col-240 w-[200px] px-4 py-3 text-left text-sm font-medium text-[#101418]">
+                                    類型</th>
+                                <th
+                                    class="table-col-360 w-[200px] px-4 py-3 text-left text-sm font-medium text-[#101418]">
+                                    隊伍 1</th>
+                                <th
+                                    class="table-col-480 w-[200px] px-4 py-3 text-left text-sm font-medium text-[#101418]">
+                                    隊伍 2</th>
+                                <th
+                                    class="table-col-600 w-[150px] px-4 py-3 text-left text-sm font-medium text-[#101418]">
+                                    裁判</th>
+                                <th
+                                    class="table-col-600 w-[150px] px-4 py-3 text-left text-sm font-medium text-[#101418]">
+                                    狀態</th>
+                                <th
+                                    class="table-col-840 w-[150px] px-4 py-3 text-left text-sm font-medium text-[#101418]">
+                                    操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="scheduleTableBody" class="divide-y divide-[#d4dbe2]">
+                            <!-- JS 動態填充 -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
+
+            <!-- Container Query CSS -->
+            <style>
+                @container (max-width:120px) {
+                    .table-col-120 {
+                        display: none;
+                    }
+                }
+
+                @container (max-width:240px) {
+                    .table-col-240 {
+                        display: none;
+                    }
+                }
+
+                @container (max-width:360px) {
+                    .table-col-360 {
+                        display: none;
+                    }
+                }
+
+                @container (max-width:480px) {
+                    .table-col-480 {
+                        display: none;
+                    }
+                }
+
+                @container (max-width:600px) {
+                    .table-col-600 {
+                        display: none;
+                    }
+                }
+
+                @container (max-width:720px) {
+                    .table-col-720 {
+                        display: none;
+                    }
+                }
+
+                @container (max-width:840px) {
+                    .table-col-840 {
+                        display: none;
+                    }
+                }
+            </style>
         </main>
     </div>
 
@@ -161,6 +224,7 @@
           <td class="px-4 py-2 text-sm text-[#101518]">${m.team_type}</td>
           <td class="px-4 py-2 text-sm text-[#101518]">${m.home_team}</td>
           <td class="px-4 py-2 text-sm text-[#101518]">${m.away_team}</td>
+          <td class="px-4 py-2 text-sm text-[#101518]">${m.referee}</td>
           <td class="px-4 py-2 text-sm font-medium text-[#0e141b]">${m.status}</td>
         `;
                 tbody.appendChild(row);
