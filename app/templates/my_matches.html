@@ -11,149 +11,220 @@
     <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
 </head>
 
-<body class="flex min-h-screen flex-col bg-gray-50 font-sans text-gray-800">
-    <!-- Header -->
-    <header class="flex items-center justify-between border-b border-[#eaeef1] px-10 py-3 bg-white">
-        <div class="flex items-center gap-4">
-            <div class="size-4">
-                <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M44 4H30.6666V17.3334H17.3334V30.6666H4V44H44V4Z" fill="currentColor"></path>
-                </svg>
+<body>
+    <div class="min-h-screen bg-gray-50 font-['Inter','Noto Sans',sans-serif]">
+        <div class="flex flex-col h-full min-h-screen">
+            <!-- Header -->
+            <header
+                class="flex items-center justify-between border-b border-[#eaeef1] px-10 py-3 bg-white fixed top-0 left-0 right-0 z-10">
+                <div class="flex items-center gap-4">
+                    <div class="size-4">
+                        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M44 4H30.6666V17.3334H17.3334V30.6666H4V44H44V4Z" fill="currentColor"></path>
+                        </svg>
+                    </div>
+                    <h2 class="text-lg font-bold text-[#101518] tracking-[-0.015em]">中正排球聯盟</h2>
+                </div>
+                <div class="flex flex-1 justify-end gap-8">
+                    <nav class="flex items-center gap-9">
+                        <a class="text-[#101518] text-sm font-medium"
+                            href="{{ url_for('main.dashboard') }}">Dashboard</a>
+                        <a class="text-[#101518] text-sm font-medium"
+                            href="{{ url_for('main.edit_profile') }}">Profile</a>
+                    </nav>
+                    <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10"
+                        style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDt2IBTIdCHam2F8XQEDrt_7eYY2hPMdKkYDilkB7cOMMGaoVDUtqfkgNImtBkTfueXva8doqU8PZT0puBWecaKF0jjDJfIj4MoLjDcgeCN1JjowkQoLT2DgEGahMD-C5OCVo8In0Iauj4aXK-qd2nYxqBaUTOW1h-aDYS6Y5Wo-3yV2Uw23pzgvK4IwYbWqYojbg77RYVqG3TW4uOKXfzdULQgar8h5KQY9Td_ntOiPe6gxvXpea3D4uOTTgsOnI0LlLuuLAv8rTLM");'>
+                    </div>
+                </div>
+            </header>
+
+            <div class="flex h-full w-full min-h-screen" style="padding-top: 64px;">
+                <!-- Sidebar -->
+                <aside class="w-80 h-[calc(100vh-64px)] bg-slate-50 border-r border-[#e5e7eb]
+         sticky top-16 flex flex-col overflow-auto p-4">
+                    <div class="flex flex-col gap-4 pb-2">
+                        <div>
+                            <h1 class="text-[#0e141b] text-base font-medium">{{ current_user.name }}</h1>
+                            {% if current_user.team.name %}
+                            <p class="text-[#4e7097] text-sm">{{ current_user.team.name }} - {{ current_user.role }}</p>
+                            {% else %}
+                            <p class="text-[#4e7097] text-sm">{{ current_user.role }}</p>
+                            {% endif %}
+                        </div>
+                        <nav class="flex flex-col gap-2">
+                            <a href="{{ url_for('main.dashboard') }}">
+                                <button
+                                    class="text-left flex items-center gap-2 px-3 py-2 rounded-full hover:bg-[#eaeef1]">
+                                    <span class="text-sm font-medium text-[#101518]">Dashboard</span>
+                                </button>
+                            </a>
+                            <a href="{{ url_for('main.list_teams') }}">
+                                <button
+                                    class="text-left flex items-center gap-2 px-3 py-2 rounded-full hover:bg-[#eaeef1]">
+                                    <span class="text-sm font-medium text-[#101518]">Teams</span>
+                                </button>
+                            </a>
+                            <a href="{{ url_for('main.matches_page') }}">
+                                <button
+                                    class="text-left flex items-center gap-2 px-3 py-2 rounded-full hover:bg-[#eaeef1]">
+                                    <span class="text-sm font-medium text-[#101518]">Matches</span>
+                                </button>
+                            </a>
+                            <button class="text-left flex items-center gap-2 px-3 py-2 rounded-full hover:bg-[#eaeef1]">
+                                <span class="text-sm font-medium text-[#101518]">Settings</span>
+                            </button>
+                        </nav>
+                    </div>
+                    <div class="mt-auto">
+                        <a href="{{ url_for('main.logout') }}"
+                            class="w-full px-3 py-2 bg-blue-100 rounded-lg text-blue-900 hover:bg-blue-200">
+                            登出
+                        </a>
+                    </div>
+                </aside>
+
+                <!-- Main Content -->
+                <main class="flex-1 flex flex-col h-full min-h-screen bg-white overflow-auto">
+                    <div class="layout-content-container flex flex-col max-w-[960px] flex-1">
+
+                        <!-- 導航 -->
+                        <div class="flex flex-wrap gap-2 p-4">
+                            <a class="text-[#4e7a97] text-base font-medium leading-normal"
+                                href="{{ url_for('main.dashboard') }}">Dashboard</a>
+                            <span class="text-[#4e7a97] text-base font-medium leading-normal">/</span>
+                            <span class="text-[#0e161b] text-base font-medium leading-normal">我的比賽</span>
+                        </div>
+
+                        {% if team %}
+
+                        <!-- 隊伍資訊 -->
+                        <div class="flex flex-wrap justify-between gap-3 p-4">
+                            <div class="flex min-w-72 flex-col gap-3">
+                                <p class="text-[#0e161b] text-[32px] font-bold leading-tight">{{ team.name }}</p>
+                                <p class="text-[#4e7a97] text-sm font-normal leading-normal">{{ team.team_type }} | 循環
+                                    {{
+                                    team.team_cycle
+                                    or '未分組' }}</p>
+                            </div>
+                        </div>
+
+                        {% if matches %}
+                        <!-- matches table -->
+                        <div class="bg-white p-6 rounded-lg shadow overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-100">
+                                    <tr>
+                                        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">對手隊伍</th>
+                                        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">裁判隊伍</th>
+                                        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">比賽時間</th>
+                                        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">比分</th>
+                                        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">勝負</th>
+                                        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">確認狀態</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200">
+                                    {% for match in matches %}
+                                    <tr class="hover:bg-gray-50">
+                                        <!-- opponent -->
+                                        <td class="px-4 py-3 text-sm">
+                                            {% if match.team1.id == team.id %}
+                                            {{ match.team2.name }}
+                                            {% else %}
+                                            {{ match.team1.name }}
+                                            {% endif %}
+                                        </td>
+                                        <!-- referee -->
+                                        <td class="px-4 py-3 text-sm">{{ match.referee.name }}</td>
+                                        <!-- time -->
+                                        <td class="px-4 py-3 text-sm">{{ match.match_time or '尚未排定' }}</td>
+                                        <!-- score -->
+                                        <td class="px-4 py-3 text-sm">
+                                            {{ match.team1_set1 or '-' }} : {{ match.team2_set1 or '-' }}<br />
+                                            {{ match.team1_set2 or '-' }} : {{ match.team2_set2 or '-' }}<br />
+                                            {{ match.team1_set3 or '-' }} : {{ match.team2_set3 or '-' }}
+                                        </td>
+                                        <!-- result -->
+                                        <td class="px-4 py-3 text-sm">
+                                            {% if match.winner_id == team.id %}
+                                            <span class="text-green-600">✅ 勝</span>
+                                            {% elif match.loser_id == team.id %}
+                                            <span class="text-red-600">❌ 敗</span>
+                                            {% else %}
+                                            <span class="text-gray-500">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <!-- confirmation -->
+                                        <td class="px-4 py-3 text-sm space-x-2">
+                                            {% if match.status == 'waiting_confirm' %}
+                                            {% if team.id == match.team1_id and not match.team1_confirmed %}
+                                            <form method="POST"
+                                                action="{{ url_for('main.confirm_match', match_id=match.id) }}"
+                                                class="inline">
+                                                <button type="submit"
+                                                    class="px-2 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600">✅
+                                                    確認</button>
+                                            </form>
+                                            <form method="POST"
+                                                action="{{ url_for('main.reject_match', match_id=match.id) }}"
+                                                class="inline">
+                                                <button type="submit"
+                                                    class="px-2 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600">❌
+                                                    不確認</button>
+                                            </form>
+                                            {% elif team.id == match.team2_id and not match.team2_confirmed %}
+                                            <form method="POST"
+                                                action="{{ url_for('main.confirm_match', match_id=match.id) }}"
+                                                class="inline">
+                                                <button type="submit"
+                                                    class="px-2 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600">✅
+                                                    確認</button>
+                                            </form>
+                                            <form method="POST"
+                                                action="{{ url_for('main.reject_match', match_id=match.id) }}"
+                                                class="inline">
+                                                <button type="submit"
+                                                    class="px-2 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600">❌
+                                                    不確認</button>
+                                            </form>
+                                            {% else %}
+                                            <span class="text-green-600 font-medium">✅ 已確認</span>
+                                            {% endif %}
+                                            {% elif match.status == 'confirmed' %}
+                                            <span class="text-green-600 font-medium">✅ 雙方已確認</span>
+                                            {% elif match.status == 'rejected' %}
+                                            <span class="text-red-600 font-medium">❌ 已拒絕，請重新登錄</span>
+                                            {% else %}
+                                            <span class="text-gray-500">-</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="bg-white p-6 rounded-lg shadow text-center text-gray-500">
+                            目前尚無賽程
+                        </div>
+                        {% endif %}
+
+                        {% else %}
+                        <div class="bg-white p-6 rounded-lg shadow text-center text-gray-500">
+                            你尚未加入任何隊伍
+                        </div>
+                        {% endif %}
+
+                        <div class="flex px-4 py-3 justify-start">
+                            <a href="{{ url_for('main.dashboard') }}">
+                                <button
+                                    class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-[#e7eef3] text-[#0e161b] text-sm font-bold leading-normal tracking-[0.015em]">
+                                    <span class="truncate">回主頁</span>
+                                </button>
+                            </a>
+                        </div>
+                </main>
             </div>
-            <h2 class="text-lg font-bold text-[#101518] tracking-[-0.015em]">中正排球聯盟</h2>
         </div>
-        <div class="flex flex-1 justify-end gap-8">
-            <nav class="flex items-center gap-9">
-                <a class="text-[#101518] text-sm font-medium" href="{{ url_for('main.dashboard') }}">Dashboard</a>
-                <a class="text-[#101518] text-sm font-medium" href="{{ url_for('main.edit_profile') }}">Profile</a>
-            </nav>
-            <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10"
-                style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDt2IBTIdCHam2F8XQEDrt_7eYY2hPMdKkYDilkB7cOMMGaoVDUtqfkgNImtBkTfueXva8doqU8PZT0puBWecaKF0jjDJfIj4MoLjDcgeCN1JjowkQoLT2DgEGahMD-C5OCVo8In0Iauj4aXK-qd2nYxqBaUTOW1h-aDYS6Y5Wo-3yV2Uw23pzgvK4IwYbWqYojbg77RYVqG3TW4uOKXfzdULQgar8h5KQY9Td_ntOiPe6gxvXpea3D4uOTTgsOnI0LlLuuLAv8rTLM");'>
-            </div>
-        </div>
-    </header>
-
-    <main class="container mx-auto px-8 py-20 space-y-6">
-        <!-- page title -->
-        <h2 class="text-2xl font-bold text-gray-900">我的比賽</h2>
-
-        {% if team %}
-        <!-- team info -->
-        <div class="bg-white p-6 rounded-lg shadow">
-            <p class="text-lg"><strong>隊伍：</strong>{{ team.name }}
-                <span class="text-sm text-gray-500">({{ team.team_type }} - {{ team.team_cycle or '未分組' }})</span>
-            </p>
-        </div>
-
-        {% if matches %}
-        <!-- matches table -->
-        <div class="bg-white p-6 rounded-lg shadow overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-100">
-                    <tr>
-                        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">對手隊伍</th>
-                        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">裁判隊伍</th>
-                        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">比賽時間</th>
-                        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">比分</th>
-                        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">勝負</th>
-                        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">確認狀態</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200">
-                    {% for match in matches %}
-                    <tr class="hover:bg-gray-50">
-                        <!-- opponent -->
-                        <td class="px-4 py-3 text-sm">
-                            {% if match.team1.id == team.id %}
-                            {{ match.team2.name }}
-                            {% else %}
-                            {{ match.team1.name }}
-                            {% endif %}
-                        </td>
-                        <!-- referee -->
-                        <td class="px-4 py-3 text-sm">{{ match.referee.name }}</td>
-                        <!-- time -->
-                        <td class="px-4 py-3 text-sm">{{ match.match_time or '尚未排定' }}</td>
-                        <!-- score -->
-                        <td class="px-4 py-3 text-sm">
-                            {{ match.team1_set1 or '-' }} : {{ match.team2_set1 or '-' }}<br />
-                            {{ match.team1_set2 or '-' }} : {{ match.team2_set2 or '-' }}<br />
-                            {{ match.team1_set3 or '-' }} : {{ match.team2_set3 or '-' }}
-                        </td>
-                        <!-- result -->
-                        <td class="px-4 py-3 text-sm">
-                            {% if match.winner_id == team.id %}
-                            <span class="text-green-600">✅ 勝</span>
-                            {% elif match.loser_id == team.id %}
-                            <span class="text-red-600">❌ 敗</span>
-                            {% else %}
-                            <span class="text-gray-500">-</span>
-                            {% endif %}
-                        </td>
-                        <!-- confirmation -->
-                        <td class="px-4 py-3 text-sm space-x-2">
-                            {% if match.status == 'waiting_confirm' %}
-                            {% if team.id == match.team1_id and not match.team1_confirmed %}
-                            <form method="POST" action="{{ url_for('main.confirm_match', match_id=match.id) }}"
-                                class="inline">
-                                <button type="submit"
-                                    class="px-2 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600">✅
-                                    確認</button>
-                            </form>
-                            <form method="POST" action="{{ url_for('main.reject_match', match_id=match.id) }}"
-                                class="inline">
-                                <button type="submit"
-                                    class="px-2 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600">❌
-                                    不確認</button>
-                            </form>
-                            {% elif team.id == match.team2_id and not match.team2_confirmed %}
-                            <form method="POST" action="{{ url_for('main.confirm_match', match_id=match.id) }}"
-                                class="inline">
-                                <button type="submit"
-                                    class="px-2 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600">✅
-                                    確認</button>
-                            </form>
-                            <form method="POST" action="{{ url_for('main.reject_match', match_id=match.id) }}"
-                                class="inline">
-                                <button type="submit"
-                                    class="px-2 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600">❌
-                                    不確認</button>
-                            </form>
-                            {% else %}
-                            <span class="text-green-600 font-medium">✅ 已確認</span>
-                            {% endif %}
-                            {% elif match.status == 'confirmed' %}
-                            <span class="text-green-600 font-medium">✅ 雙方已確認</span>
-                            {% elif match.status == 'rejected' %}
-                            <span class="text-red-600 font-medium">❌ 已拒絕，請重新登錄</span>
-                            {% else %}
-                            <span class="text-gray-500">-</span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        {% else %}
-        <div class="bg-white p-6 rounded-lg shadow text-center text-gray-500">
-            目前尚無賽程
-        </div>
-        {% endif %}
-
-        {% else %}
-        <div class="bg-white p-6 rounded-lg shadow text-center text-gray-500">
-            你尚未加入任何隊伍
-        </div>
-        {% endif %}
-
-        <div class="text-center">
-            <a href="{{ url_for('main.dashboard') }}"
-                class="inline-block px-6 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition">
-                回主頁
-            </a>
-        </div>
-    </main>
 </body>
 
 </html>
