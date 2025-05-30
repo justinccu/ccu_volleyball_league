@@ -1,20 +1,163 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-Hant" class="h-full w-full">
+
 <head>
-    <title>登錄比賽結果</title>
-    <style>
-        .flash-message {
-            margin-top: 20px;
-        }
-        .text-red {
-            color: red;
-            font-weight: bold;
-        }
-        .text-green {
-            color: green;
-            font-weight: bold;
-        }
-    </style>
+    <meta charset="utf-8" />
+    <title>中正排球聯盟 — 登錄比賽結果</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin />
+    <link rel="stylesheet" as="style" onload="this.rel='stylesheet'"
+        href="https://fonts.googleapis.com/css2?display=swap&family=Lexend:wght@400;500;700;900&family=Noto+Sans:wght@400;500;700;900" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+</head>
+
+<body>
+    <div class="min-h-screen bg-gray-50 font-['Inter','Noto Sans',sans-serif]">
+        <div class="flex flex-col h-full min-h-screen">
+            <!-- Header -->
+            <header
+                class="flex items-center justify-between border-b border-[#eaeef1] px-10 py-3 bg-white fixed top-0 left-0 right-0 z-10">
+                <div class="flex items-center gap-4">
+                    <div class="size-4">
+                        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M44 4H30.6666V17.3334H17.3334V30.6666H4V44H44V4Z" fill="currentColor"></path>
+                        </svg>
+                    </div>
+                    <h2 class="text-lg font-bold text-[#101518] tracking-[-0.015em]">中正排球聯盟</h2>
+                </div>
+                <div class="flex flex-1 justify-end gap-8">
+                    <nav class="flex items-center gap-9">
+                        <a class="text-[#101518] text-sm font-medium"
+                            href="{{ url_for('main.dashboard') }}">Dashboard</a>
+                        <a class="text-[#101518] text-sm font-medium"
+                            href="{{ url_for('main.edit_profile') }}">Profile</a>
+                    </nav>
+                    <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10"
+                        style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDt2IBTIdCHam2F8XQEDrt_7eYY2hPMdKkYDilkB7cOMMGaoVDUtqfkgNImtBkTfueXva8doqU8PZT0puBWecaKF0jjDJfIj4MoLjDcgeCN1JjowkQoLT2DgEGahMD-C5OCVo8In0Iauj4aXK-qd2nYxqBaUTOW1h-aDYS6Y5Wo-3yV2Uw23pzgvK4IwYbWqYojbg77RYVqG3TW4uOKXfzdULQgar8h5KQY9Td_ntOiPe6gxvXpea3D4uOTTgsOnI0LlLuuLAv8rTLM");'>
+                    </div>
+                </div>
+            </header>
+
+            <div class="flex h-full w-full min-h-screen" style="padding-top: 64px;">
+                <!-- Sidebar -->
+                <aside class="w-80 h-[calc(100vh-64px)] bg-slate-50 border-r border-[#e5e7eb]
+             sticky top-16 flex flex-col overflow-auto p-4">
+                    <div class="flex flex-col gap-4 pb-2">
+                        <div>
+                            <h1 class="text-[#0e141b] text-base font-medium">{{ current_user.name }}</h1>
+                            {% if current_user.team.name %}
+                            <p class="text-[#4e7097] text-sm">{{ current_user.team.name }} - {{ current_user.role }}</p>
+                            {% else %}
+                            <p class="text-[#4e7097] text-sm">{{ current_user.role }}</p>
+                            {% endif %}
+                        </div>
+                        <nav class="flex flex-col gap-2">
+                            <a href="{{ url_for('main.dashboard') }}">
+                                <button
+                                    class="text-left flex items-center gap-2 px-3 py-2 rounded-full hover:bg-[#eaeef1]">
+                                    <span class="text-sm font-medium text-[#101518]">Dashboard</span>
+                                </button>
+                            </a>
+                            <a href="{{ url_for('main.list_teams') }}">
+                                <button
+                                    class="text-left flex items-center gap-2 px-3 py-2 rounded-full hover:bg-[#eaeef1]">
+                                    <span class="text-sm font-medium text-[#101518]">Teams</span>
+                                </button>
+                            </a>
+                            <a href="{{ url_for('main.matches_page') }}">
+                                <button
+                                    class="text-left flex items-center gap-2 px-3 py-2 rounded-full hover:bg-[#eaeef1]">
+                                    <span class="text-sm font-medium text-[#101518]">Matches</span>
+                                </button>
+                            </a>
+                            <button class="text-left flex items-center gap-2 px-3 py-2 rounded-full hover:bg-[#eaeef1]">
+                                <span class="text-sm font-medium text-[#101518]">Settings</span>
+                            </button>
+                        </nav>
+                    </div>
+                    <div class="mt-auto">
+                        <a href="{{ url_for('main.logout') }}"
+                            class="w-full px-3 py-2 bg-blue-100 rounded-lg text-blue-900 hover:bg-blue-200">
+                            登出
+                        </a>
+                    </div>
+                </aside>
+
+                <!-- Main Content -->
+                <main class="flex-1 bg-white p-6 overflow-auto">
+                    <div class="mb-6">
+                        <h1 class="text-2xl font-bold text-[#121810]">登錄比賽結果</h1>
+                    </div>
+
+                    <div class="mb-6 space-y-2">
+                        <p><span class="font-medium">比賽隊伍：</span>
+                            <span id="team1_name">{{ match.team1.name }}</span> vs
+                            <span id="team2_name">{{ match.team2.name }}</span>
+                        </p>
+                        <p><span class="font-medium">裁判隊伍：</span> {{ match.referee.name }}</p>
+                        <p><span class="font-medium">比賽時間：</span> {{ match.match_time or '尚未設定' }}</p>
+                        <p id="winner_result" class="text-green-600 font-semibold"></p>
+                    </div>
+
+                    <form method="POST" onsubmit="return validateForm()" class="space-y-6">
+                        <fieldset class="space-y-4">
+                            <legend class="font-medium">比分紀錄（最多三局）</legend>
+
+                            <!-- 第 1 局 -->
+                            <div class="flex items-center space-x-2">
+                                <label class="w-20 text-sm">第 1 局</label>
+                                <input type="number" name="team1_set1" required oninput="updateWinner()"
+                                    class="form-input w-16" placeholder="0" />
+                                <span class="text-lg">:</span>
+                                <input type="number" name="team2_set1" required oninput="updateWinner()"
+                                    class="form-input w-16" placeholder="0" />
+                            </div>
+
+                            <!-- 第 2 局 -->
+                            <div class="flex items-center space-x-2">
+                                <label class="w-20 text-sm">第 2 局</label>
+                                <input type="number" name="team1_set2" required oninput="updateWinner()"
+                                    class="form-input w-16" placeholder="0" />
+                                <span class="text-lg">:</span>
+                                <input type="number" name="team2_set2" required oninput="updateWinner()"
+                                    class="form-input w-16" placeholder="0" />
+                            </div>
+
+                            <!-- 第 3 局（若需） -->
+                            <div class="flex items-center space-x-2">
+                                <label class="w-20 text-sm">第 3 局</label>
+                                <input type="number" name="team1_set3" oninput="updateWinner()" class="form-input w-16"
+                                    placeholder="0" />
+                                <span class="text-lg">:</span>
+                                <input type="number" name="team2_set3" oninput="updateWinner()" class="form-input w-16"
+                                    placeholder="0" />
+                            </div>
+                        </fieldset>
+
+                        <fieldset class="space-y-4">
+                            <legend class="font-medium">燈錢</legend>
+
+                            <div class="flex items-center space-x-2">
+                                <label class="w-20 text-sm">{{ match.team1.name }}</label>
+                                <input type="number" name="team1_lamp_fee" required class="form-input w-32" />
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <label class="w-20 text-sm">{{ match.team2.name }}</label>
+                                <input type="number" name="team2_lamp_fee" required class="form-input w-32" />
+                            </div>
+                        </fieldset>
+
+                        <div class="text-right">
+                            <button type="submit" class="px-6 py-2 bg-green-500 text-white rounded hover:bg-green-600">
+                                登錄比賽結果
+                            </button>
+                        </div>
+                    </form>
+            </div>
+            </main>
+        </div>
+    </div>
+
     <script>
         function updateWinner() {
             const t1s1 = parseInt(document.querySelector('input[name="team1_set1"]').value || 0);
@@ -24,14 +167,11 @@
             const t1s3 = parseInt(document.querySelector('input[name="team1_set3"]').value || 0);
             const t2s3 = parseInt(document.querySelector('input[name="team2_set3"]').value || 0);
 
-            let team1_win = 0;
-            let team2_win = 0;
-
-            if (t1s1 || t2s1) team1_win += t1s1 > t2s1 ? 1 : (t1s1 < t2s1 ? 0 : 0);
-            if (t1s2 || t2s2) team1_win += t1s2 > t2s2 ? 1 : (t1s2 < t2s2 ? 0 : 0);
-            if (t1s3 || t2s3) team1_win += t1s3 > t2s3 ? 1 : (t1s3 < t2s3 ? 0 : 0);
-
-            team2_win = (t1s1 || t2s1 ? 1 : 0) + (t1s2 || t2s2 ? 1 : 0) + (t1s3 || t2s3 ? 1 : 0) - team1_win;
+            let team1_win = 0, team2_win = 0;
+            if (t1s1 || t2s1) team1_win += t1s1 > t2s1 ? 1 : 0;
+            if (t1s2 || t2s2) team1_win += t1s2 > t2s2 ? 1 : 0;
+            if (t1s3 || t2s3) team1_win += t1s3 > t2s3 ? 1 : 0;
+            team2_win = ((t1s1 || t2s1) ? 1 : 0) + ((t1s2 || t2s2) ? 1 : 0) + ((t1s3 || t2s3) ? 1 : 0) - team1_win;
 
             const team1_name = document.getElementById("team1_name").textContent;
             const team2_name = document.getElementById("team2_name").textContent;
@@ -39,9 +179,9 @@
 
             if (team1_win + team2_win >= 2) {
                 if (team1_win > team2_win) {
-                    resultText.textContent = `🏆 最終勝方：${team1_name} | 敗方：${team2_name}`;
+                    resultText.textContent = `🏆 勝方：${team1_name} | 敗方：${team2_name}`;
                 } else if (team2_win > team1_win) {
-                    resultText.textContent = `🏆 最終勝方：${team2_name} | 敗方：${team1_name}`;
+                    resultText.textContent = `🏆 勝方：${team2_name} | 敗方：${team1_name}`;
                 } else {
                     resultText.textContent = '';
                 }
@@ -51,72 +191,30 @@
         }
 
         function validateForm() {
-            const set1_team1 = parseInt(document.querySelector('input[name="team1_set1"]').value || 0);
-            const set1_team2 = parseInt(document.querySelector('input[name="team2_set1"]').value || 0);
-            const set2_team1 = parseInt(document.querySelector('input[name="team1_set2"]').value || 0);
-            const set2_team2 = parseInt(document.querySelector('input[name="team2_set2"]').value || 0);
-            const set3_team1 = parseInt(document.querySelector('input[name="team1_set3"]').value || 0);
-            const set3_team2 = parseInt(document.querySelector('input[name="team2_set3"]').value || 0);
+            const parseVal = name => parseInt(document.querySelector(`input[name="${name}"]`).value || 0);
+            const t1s1 = parseVal("team1_set1"), t2s1 = parseVal("team2_set1");
+            const t1s2 = parseVal("team1_set2"), t2s2 = parseVal("team2_set2");
+            const t1s3 = parseVal("team1_set3"), t2s3 = parseVal("team2_set3");
+            const lamp1 = parseVal("team1_lamp_fee"), lamp2 = parseVal("team2_lamp_fee");
 
-            const lamp1 = parseInt(document.querySelector('input[name="team1_lamp_fee"]').value || 0);
-            const lamp2 = parseInt(document.querySelector('input[name="team2_lamp_fee"]').value || 0);
-
-            if ((lamp1 + lamp2) > 80) {
+            if (lamp1 + lamp2 > 80) {
                 alert("兩隊總燈錢不得超過 80 元");
                 return false;
             }
 
-            let team1_win = 0;
-            let team2_win = 0;
-            if (set1_team1 > set1_team2) team1_win++; else team2_win++;
-            if (set2_team1 > set2_team2) team1_win++; else team2_win++;
-            if (team1_win === 1 && team2_win === 1) {
-                if (!set3_team1 || !set3_team2) {
-                    alert("前兩局雙方各贏一局，請填寫第三局比分");
+            let w1 = 0, w2 = 0;
+            if (t1s1 > t2s1) w1++; else w2++;
+            if (t1s2 > t2s2) w1++; else w2++;
+            if (w1 === 1 && w2 === 1) {
+                if (!t1s3 && !t2s3) {
+                    alert("前兩局各贏一局，請填寫第三局比分");
                     return false;
                 }
-                if (set3_team1 > set3_team2) team1_win++; else team2_win++;
+                if (t1s3 > t2s3) w1++; else w2++;
             }
-
             return true;
         }
     </script>
-</head>
-<body>
-    <h2>📋 登錄比賽結果</h2>
-
-    <p id="winner_result" style="font-weight:bold; color:green;"></p>
-
-    <p><strong>比賽隊伍:</strong> <span id="team1_name">{{ match.team1.name }}</span> vs <span id="team2_name">{{ match.team2.name }}</span></p>
-    <p><strong>裁判隊伍:</strong> {{ match.referee.name }}</p>
-    <p><strong>比賽時間:</strong> {{ match.match_time or '尚未設定' }}</p>
-
-    <form method="POST" onsubmit="return validateForm()">
-        <h4>比分紀錄(最多三局)</h4>
-        <label>第1局:</label>
-        <input type="number" name="team1_set1" required oninput="updateWinner()"> : 
-        <input type="number" name="team2_set1" required oninput="updateWinner()"><br>
-
-        <label>第2局:</label>
-        <input type="number" name="team1_set2" required oninput="updateWinner()"> : 
-        <input type="number" name="team2_set2" required oninput="updateWinner()"><br>
-
-        <label>第3局:</label>
-        <input type="number" name="team1_set3" oninput="updateWinner()"> : 
-        <input type="number" name="team2_set3" oninput="updateWinner()"><br>
-
-        <br>
-        <label>燈錢({{ match.team1.name }}):</label>
-        <input type="number" name="team1_lamp_fee" required><br>
-
-        <label>燈錢({{ match.team2.name }}):</label>
-        <input type="number" name="team2_lamp_fee" required><br>
-
-        <br>
-        <button type="submit">登錄比賽結果</button>
-    </form>
-
-    <br>
-    <a href="/dashboard">回主頁</a>
 </body>
+
 </html>

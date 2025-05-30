@@ -343,10 +343,20 @@ def my_matches():
     if not team:
         return render_template('my_matches.html', team=None, matches=[])
 
+    # 1. 先撈出所有比賽
     matches = Match.query.filter(
         (Match.team1_id == team.id) | (Match.team2_id == team.id)
     ).all()
 
+    # 2. 標記哪些 match 已有待處理的調賽請求
+    for m in matches:
+        has_pending = RescheduleRequest.query.filter_by(
+            match_id=m.id,
+            status='pending'
+        ).first() is not None
+        setattr(m, 'pending_reschedule', has_pending)
+
+    # 3. 再把這個 matches 傳給模板
     return render_template('my_matches.html', team=team, matches=matches)
 
 @main.route('/join/request', methods=['GET', 'POST'])
@@ -363,7 +373,6 @@ def join_request():
         jr = JoinRequest(user_id=current_user.id, team_id=team_id)
         db.session.add(jr)
         db.session.commit()
-        flash("已送出申請，請等待隊長審核")
         return redirect(url_for('main.join_request'))
 
     teams = Team.query.all()
@@ -389,7 +398,6 @@ def approve_join(request_id):
     req.user.team_id = req.team_id
     req.user.role = 'member'
     db.session.commit()
-    flash(f"✅ {req.user.name} 已加入 {req.team.name}")
     return redirect(url_for('main.view_join_requests'))
 
 @main.route('/captain/reject/<int:request_id>', methods=['POST'])
@@ -401,7 +409,6 @@ def reject_join(request_id):
 
     req.status = 'rejected'
     db.session.commit()
-    flash(f"❌ 已拒絕 {req.user.name} 的申請")
     return redirect(url_for('main.view_join_requests'))
 
 @main.route('/my/team_members')
@@ -507,7 +514,6 @@ def confirm_match(match_id):
         match.status = 'confirmed'
 
     db.session.commit()
-    flash("✅ 你已確認比賽結果")
     return redirect(url_for('main.my_matches'))
 
 @main.route('/match/reject/<int:match_id>', methods=['POST'])
@@ -941,10 +947,19 @@ def update_match(match_id):
 @main.route('/api/available_times/<int:match_id>', methods=['GET'])
 @login_required
 def get_available_times(match_id):
-    if current_user.role != 'admin':
-        return jsonify({'success': False, 'message': '無權限操作'}), 403
-
+    
     current_match = Match.query.get_or_404(match_id)
+
+    # 允許 admin 或參賽隊伍的隊長
+    if not (
+        current_user.role == 'admin'
+        or (
+            current_user.role == 'captain'
+            and current_user.team
+            and current_user.team.id in [current_match.team1_id, current_match.team2_id]
+        )
+    ):
+        return jsonify({'success': False, 'message': '無權限操作'}), 403
 
     # 獲取所有相同類型的比賽
     all_matches = Match.query.filter(
@@ -1219,3 +1234,4 @@ def get_current_user_team():
         'success': False,
         'team_id': None
     }) 
+    

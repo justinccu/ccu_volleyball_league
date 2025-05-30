@@ -472,7 +472,7 @@
                         // 顯示比賽期間
                         const periodElement = document.getElementById('matchPeriod');
                         periodElement.innerHTML = `${data.period.start} 至 ${data.period.end}<br>` +
-                            `<small style="color: #666;">（原始結束日期：${data.period.original_end}）</small>`;
+                            `<small style="color: #666;">（原始結束日期：${data.period.original_end})</small>`;
 
                         const timeSelect = document.getElementById('editMatchTime');
                         timeSelect.innerHTML = '<option value="">請選擇時間</option><option value="TBD">待定</option>';

@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8" />
-    <title>中正排球聯盟 — 我的比賽</title>
+    <title>My Matches | 中正排球聯盟</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin />
     <link rel="stylesheet" as="style" onload="this.rel='stylesheet'"
@@ -120,6 +120,9 @@
                                         <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">比分</th>
                                         <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">勝負</th>
                                         <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">確認狀態</th>
+                                        {% if current_user.role == 'captain' %}
+                                        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">調賽申請</th>
+                                        {% endif %}
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-200">
@@ -197,6 +200,31 @@
                                             <span class="text-gray-500">-</span>
                                             {% endif %}
                                         </td>
+                                        <!-- reschedule request -->
+                                        {% if current_user.role == 'captain' %}
+                                        <td class="px-4 py-3 text-sm">
+                                            {% if match.pending_reschedule and match.status in ['pending', '尚未開始',
+                                            'rejected'] %}
+                                            <button
+                                                class="px-2 py-1 bg-gray-300 text-gray-600 text-xs rounded cursor-pointer"
+                                                onclick="openRescheduleStatusModal('{{ match.id }}')">
+                                                等待確認中
+                                            </button>
+                                            {% elif match.status in ['pending', '尚未開始', 'rejected'] %}
+                                            <button
+                                                class="px-2 py-1 bg-yellow-400 text-white text-xs rounded hover:bg-yellow-500"
+                                                onclick="openRescheduleModal('{{ match.id }}')">
+                                                申請調賽
+                                            </button>
+                                            {% elif match.status == 'waiting_confirm' %}
+                                            <span class="text-gray-400 text-xs">成績確認中</span>
+                                            {% elif match.status in ['confirmed', '已結束'] %}
+                                            <span class="text-gray-400 text-xs">已完賽</span>
+                                            {% else %}
+                                            <span class="text-gray-400 text-xs">-</span>
+                                            {% endif %}
+                                        </td>
+                                        {% endif %}
                                     </tr>
                                     {% endfor %}
                                 </tbody>
@@ -222,9 +250,103 @@
                                 </button>
                             </a>
                         </div>
+                    </div>
                 </main>
             </div>
         </div>
+
+        <!-- 調賽申請 Modal -->
+        <div id="rescheduleModal"
+            class="modal hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+            <div class="relative top-20 mx-auto p-5 border w-[600px] shadow-lg rounded-md bg-white">
+                <div class="mt-3">
+                    <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">調賽申請</h3>
+                    <form id="rescheduleForm">
+                        <input type="hidden" id="rescheduleMatchId">
+                        <div class="mb-4">
+                            <label class="block text-gray-700 text-sm font-bold mb-2">比賽期間</label>
+                            <span id="reschedulePeriod" class="text-sm text-gray-600"></span>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-gray-700 text-sm font-bold mb-2">比賽時間</label>
+                            <select id="rescheduleTime"
+                                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                                <option value="">請選擇時間</option>
+                                <option value="TBD">待定</option>
+                            </select>
+                        </div>
+                        <div class="flex justify-end gap-2">
+                            <button type="button" onclick="closeRescheduleModal()"
+                                class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400">取消</button>
+                            <button type="submit"
+                                class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">提交</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <!-- JS -->
+        <script>
+            function openRescheduleModal(matchId) {
+                fetch(`/api/available_times/${matchId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            document.getElementById('reschedulePeriod').textContent =
+                                `${data.period.start} 至 ${data.period.end}`;
+                            const timeSelect = document.getElementById('rescheduleTime');
+                            timeSelect.innerHTML = '<option value="">請選擇時間</option><option value="TBD">待定</option>';
+                            data.available_times.forEach(time => {
+                                const option = document.createElement('option');
+                                option.value = time;
+                                option.textContent = time.replace('T', ' ');
+                                timeSelect.appendChild(option);
+                            });
+                            document.getElementById('rescheduleModal').classList.remove('hidden');
+                            document.getElementById('rescheduleMatchId').value = matchId;
+                        } else {
+                            alert('無法獲取可用時間：' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching available times:', error);
+                        alert('獲取可用時間時發生錯誤');
+                    });
+            }
+            function closeRescheduleModal() {
+                document.getElementById('rescheduleModal').classList.add('hidden');
+            }
+            document.getElementById('rescheduleForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const matchId = document.getElementById('rescheduleMatchId').value;
+                const requestedTime = document.getElementById('rescheduleTime').value;
+                try {
+                    const response = await fetch('/api/reschedule/request', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            match_id: matchId,
+                            requested_time: requestedTime
+                        })
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        closeRescheduleModal();
+                        alert('調賽申請已送出，等待對方隊伍及裁判確認');
+                        // 可加入自動刷新列表功能
+                        // location.reload();
+                    } else {
+                        alert(data.message || '申請失敗，請稍後再試');
+                    }
+                } catch (error) {
+                    console.error('Error submitting reschedule request:', error);
+                    alert('申請失敗，請稍後再試');
+                }
+            });
+
+        </script>
 </body>
 
 </html>

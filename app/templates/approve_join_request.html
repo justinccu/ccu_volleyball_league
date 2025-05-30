@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8" />
-    <title>審核入隊申請</title>
+    <title>Approve Join Request | 中正排球聯盟</title>
     <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="" />
     <link rel="stylesheet" as="style" onload="this.rel='stylesheet'"
         href="https://fonts.googleapis.com/css2?display=swap&family=Noto+Sans:wght@400;500;700;900&family=Plus+Jakarta+Sans:wght@400;500;700;800" />
@@ -155,6 +155,15 @@
                         {% else %}
                         <div class="text-[#141414] mt-6 text-center">目前沒有待審核的入隊申請。</div>
                         {% endif %}
+                    </div>
+                    
+                    <div class="flex px-4 py-3 justify-start">
+                        <a href="{{ url_for('main.dashboard') }}">
+                            <button
+                                class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-[#e7eef3] text-[#0e161b] text-sm font-bold leading-normal tracking-[0.015em]">
+                                <span class="truncate">回主頁</span>
+                            </button>
+                        </a>
                     </div>
                 </main>
             </div>
