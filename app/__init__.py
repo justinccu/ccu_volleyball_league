@@ -1,9 +1,7 @@
-import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager
-from .models import User
 
 db = SQLAlchemy()
 bcrypt = Bcrypt()
@@ -22,10 +20,11 @@ def create_app():
     from .routes import main
     app.register_blueprint(main)
 
+    # 延後 import models (只在 app_context 內需要時才 import)
     with app.app_context():
+        from .models import User
         db.create_all()
-
-        # 自動建立 admin 帳號
+        # create admin
         admin = User.query.filter_by(username='admin').first()
         if not admin:
             admin = User(
@@ -36,5 +35,5 @@ def create_app():
             )
             db.session.add(admin)
             db.session.commit()
-            
+
     return app
