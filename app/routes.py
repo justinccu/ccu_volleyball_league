@@ -743,7 +743,7 @@ def delete_user(user_id):
     else:
         db.session.delete(user)
         db.session.commit()
-        flash(f"🗑️ 使用者 {user.username} 已刪除")
+        flash(f"使用者 {user.username} 已刪除")
     return redirect(url_for('main.list_users'))
 
 @main.route('/admin/delete_team', methods=['POST'])
