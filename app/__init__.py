@@ -1,3 +1,4 @@
+import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
@@ -19,21 +20,5 @@ def create_app():
 
     from .routes import main
     app.register_blueprint(main)
-
-    # 延後 import models (只在 app_context 內需要時才 import)
-    with app.app_context():
-        from .models import User
-        db.create_all()
-        # create admin
-        admin = User.query.filter_by(username='admin').first()
-        if not admin:
-            admin = User(
-                username='admin',
-                password=bcrypt.generate_password_hash('admin').decode('utf-8'),
-                name='管理員',
-                role='admin'
-            )
-            db.session.add(admin)
-            db.session.commit()
 
     return app
