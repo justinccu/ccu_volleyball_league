@@ -10,8 +10,12 @@ login_manager = LoginManager()
 
 def create_app():
     app = Flask(__name__)
+    
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
     app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
+    # 本地測試用
+    # app.config['SECRET_KEY'] = 'your-secret-key'
+    # app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
 
     db.init_app(app)
     bcrypt.init_app(app)
