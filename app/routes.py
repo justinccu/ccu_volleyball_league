@@ -61,7 +61,7 @@ def register():
 @login_required
 def show_draw_teams_page():
     if current_user.role != 'admin':
-        flash("❌ 無權限操作")
+        flash("無權限操作")
         return redirect(url_for('main.dashboard'))
     
     # 從 URL 參數獲取 team_type
@@ -84,12 +84,12 @@ def show_draw_teams_page():
 @login_required
 def draw_teams():
     if current_user.role != 'admin':
-        return "❌ 無權限操作", 403
+        return "無權限操作", 403
 
     if request.method == 'POST':
         team_type = request.form.get('team_type')
         if not team_type:
-            flash("❌ 請選擇分組類別")
+            flash("請選擇分組類別")
             return redirect(url_for('main.draw_teams'))
 
         # 清除所有比賽記錄
@@ -122,7 +122,7 @@ def draw_teams():
 @login_required
 def generate_schedule():
     if current_user.role != 'admin':
-        flash("❌ 無權限操作")
+        flash("無權限操作")
         return redirect(url_for('main.draw_teams', team_type=request.form.get('team_type')))
 
     team_type = request.form.get('team_type')
@@ -131,11 +131,11 @@ def generate_schedule():
     start_date_str = request.form.get('start_date')
 
     if not team_type or not group_a or not group_b:
-        flash("❌ 缺少必要資訊：請確保已選擇隊伍類型並完成分組")
+        flash("缺少必要資訊：請確保已選擇隊伍類型並完成分組")
         return redirect(url_for('main.draw_teams', team_type=team_type))
 
     if not start_date_str:
-        flash("❌ 請選擇比賽開始日期")
+        flash("請選擇比賽開始日期")
         return redirect(url_for('main.draw_teams', team_type=team_type))
 
     try:
@@ -240,7 +240,7 @@ def generate_schedule():
                 referee_obj = referee
 
                 if not team1_obj or not team2_obj:
-                    flash(f"❌ 找不到隊伍：{team1 if not team1_obj else team2}")
+                    flash(f"找不到隊伍：{team1 if not team1_obj else team2}")
                     return [], used_times
 
                 # 檢查是否已存在相同的比賽
@@ -267,7 +267,7 @@ def generate_schedule():
                                 break
                     
                     if match_time is None:
-                        flash(f"❌ 無法為 {team1} vs {team2} 安排比賽時間，請增加比賽期間")
+                        flash(f"無法為 {team1} vs {team2} 安排比賽時間，請增加比賽期間")
                         return [], used_times
 
                     # 建立比賽
@@ -313,18 +313,18 @@ def generate_schedule():
             Match.team_type == team_type
         ).order_by(Match.match_time).all()
 
-        flash(f"✅ 賽程已成功生成，比賽期間：{start_date.strftime('%Y/%m/%d')} 至 {end_date.strftime('%Y/%m/%d')}")
+        flash(f"賽程已成功生成，比賽期間：{start_date.strftime('%Y/%m/%d')} 至 {end_date.strftime('%Y/%m/%d')}")
         return render_template('draw_teams.html', 
                              team_type=team_type, 
                              group_a=group_a_teams, 
                              group_b=group_b_teams,
                              matches=matches)
     except ValueError as e:
-        flash(f"❌ 日期格式錯誤：{str(e)}")
+        flash(f"日期格式錯誤：{str(e)}")
         return redirect(url_for('main.draw_teams', team_type=team_type))
     except Exception as e:
         db.session.rollback()
-        flash(f"❌ 生成賽程時發生錯誤：{str(e)}")
+        flash(f"生成賽程時發生錯誤：{str(e)}")
         return redirect(url_for('main.draw_teams', team_type=team_type))
 
 @main.route('/team/list')
@@ -337,7 +337,7 @@ def list_teams():
 @login_required
 def my_matches():
     if current_user.role not in ['captain', 'member']:
-        return "❌ 僅限隊長與隊員查看", 403
+        return "僅限隊長與隊員查看", 403
 
     team = current_user.team
     if not team:
@@ -373,7 +373,7 @@ def join_request():
 @login_required
 def view_join_requests():
     if current_user.role != 'captain' or not current_user.team:
-        return "❌ 僅限隊長操作", 403
+        return "僅限隊長操作", 403
     team = current_user.team
     requests = JoinRequest.query.filter_by(team_id=team.id, status='pending').all()
     return render_template('approve_join_request.html', requests=requests)
@@ -383,13 +383,13 @@ def view_join_requests():
 def approve_join(request_id):
     req = JoinRequest.query.get_or_404(request_id)
     if current_user.id != req.team.captain_id:
-        return "❌ 僅限該隊隊長審核", 403
+        return "僅限該隊隊長審核", 403
 
     req.status = 'approved'
     req.user.team_id = req.team_id
     req.user.role = 'member'
     db.session.commit()
-    flash(f"✅ {req.user.name} 已加入 {req.team.name}")
+    flash(f"{req.user.name} 已加入 {req.team.name}")
     return redirect(url_for('main.view_join_requests'))
 
 @main.route('/captain/reject/<int:request_id>', methods=['POST'])
@@ -397,18 +397,18 @@ def approve_join(request_id):
 def reject_join(request_id):
     req = JoinRequest.query.get_or_404(request_id)
     if current_user.id != req.team.captain_id:
-        return "❌ 僅限該隊隊長審核", 403
+        return "僅限該隊隊長審核", 403
 
     req.status = 'rejected'
     db.session.commit()
-    flash(f"❌ 已拒絕 {req.user.name} 的申請")
+    flash(f"已拒絕 {req.user.name} 的申請")
     return redirect(url_for('main.view_join_requests'))
 
 @main.route('/my/team_members')
 @login_required
 def team_members():
     if current_user.team is None:
-        flash("❌ 你尚未加入任何隊伍")
+        flash("你尚未加入任何隊伍")
         return redirect(url_for('main.dashboard'))
     return render_template('team_members.html', team=current_user.team)
 
@@ -419,7 +419,7 @@ def submit_match_result(match_id):
 
     # 僅允許裁判隊伍的隊長操作
     if current_user.role != 'captain' or not current_user.team or match.referee_id != current_user.team.id:
-        return "❌ 僅裁判隊伍之隊長可登錄比賽成績", 403
+        return "僅裁判隊伍之隊長可登錄比賽成績", 403
 
     if request.method == 'POST':
         team1_set1 = int(request.form['team1_set1'])
@@ -477,7 +477,7 @@ def submit_match_result(match_id):
         match.result_submitted_by = current_user.id
 
         db.session.commit()
-        flash("✅ 成績已成功登錄，等待雙方確認")
+        flash("成績已成功登錄，等待雙方確認")
         return redirect(url_for('main.referee_matches'))
 
     return render_template('submit_match_result.html', match=match)
@@ -488,13 +488,13 @@ def confirm_match(match_id):
     match = Match.query.get_or_404(match_id)
     team = current_user.team
 
-    # ✅ 僅限比賽雙方隊伍的「隊長」可以操作
+    # 僅限比賽雙方隊伍的「隊長」可以操作
     if (
         current_user.role != 'captain' or
         not team or
         team.id not in [match.team1_id, match.team2_id]
     ):
-        return "❌ 僅限參賽隊伍的隊長可操作", 403
+        return "僅限參賽隊伍的隊長可操作", 403
 
     # 更新該隊的確認狀態
     if team.id == match.team1_id:
@@ -507,7 +507,7 @@ def confirm_match(match_id):
         match.status = 'confirmed'
 
     db.session.commit()
-    flash("✅ 你已確認比賽結果")
+    flash("你已確認比賽結果")
     return redirect(url_for('main.my_matches'))
 
 @main.route('/match/reject/<int:match_id>', methods=['POST'])
@@ -521,20 +521,20 @@ def reject_match(match_id):
         not team or
         team.id not in [match.team1_id, match.team2_id]
     ):
-        return "❌ 僅限參賽隊伍的隊長可操作", 403
+        return "僅限參賽隊伍的隊長可操作", 403
 
     match.status = 'rejected'
     match.team1_confirmed = False
     match.team2_confirmed = False
     db.session.commit()
-    flash("❌ 你已拒絕此比賽結果，請裁判重新登錄")
+    flash("你已拒絕此比賽結果，請裁判重新登錄")
     return redirect(url_for('main.my_matches'))
 
 @main.route('/referee/matches')
 @login_required
 def referee_matches():
     if current_user.role != 'captain' or not current_user.team:
-        return "❌ 僅限隊長操作", 403
+        return "僅限隊長操作", 403
 
     # 顯示所有由該隊伍擔任裁判的比賽，不論狀態
     matches = Match.query.filter(
@@ -571,7 +571,7 @@ def logout():
 @login_required
 def list_users():
     if current_user.role != 'admin':
-        return "❌ 無權限查看使用者列表", 403
+        return "無權限查看使用者列表", 403
 
     # 處理新增
     if request.method == 'POST':
@@ -586,19 +586,19 @@ def list_users():
         team_id = None
 
         if User.query.filter_by(username=username).first():
-            flash("⚠️ 此帳號已存在")
+            flash("此帳號已存在")
         else:
             hashed_pw = bcrypt.generate_password_hash(password).decode('utf-8')
 
             if role == 'captain':
                 new_team_name = request.form.get('new_team_name')
                 if not new_team_name:
-                    flash("❌ 隊長必須輸入隊伍名稱")
+                    flash("隊長必須輸入隊伍名稱")
                     return redirect(url_for('main.list_users'))
 
                 existing_team = Team.query.filter_by(name=new_team_name, team_type=team_type).first()
                 if existing_team:
-                    flash("❌ 該隊伍名稱已被使用，請選擇其他名稱")
+                    flash("該隊伍名稱已被使用，請選擇其他名稱")
                     return redirect(url_for('main.list_users'))
 
                 # 建立隊伍
@@ -631,7 +631,7 @@ def list_users():
                 )
                 db.session.add(user)
                 db.session.commit()
-                flash(f"已新增成員 {username} 並加入隊伍")
+                flash(f"已新增成員 {username} 並加入隊伍 {team.name}")
 
             elif role == 'visitor':
                 user = User(
@@ -690,18 +690,18 @@ def list_users():
 @login_required
 def assign_user():
     if current_user.role != 'admin':
-        return "❌ 無權限操作", 403
+        return "無權限操作", 403
 
     user_id = request.form.get('user_id')
     team_id = request.form.get('team_id')  # 空字串表示移除隊伍
 
     if not user_id:
-        flash("❌ 請選擇使用者")
+        flash("請選擇使用者")
         return redirect(url_for('main.list_users'))
 
     user = User.query.get(int(user_id))
     if not user:
-        flash("❌ 找不到指定使用者")
+        flash("找不到指定使用者")
         return redirect(url_for('main.list_users'))
 
     if team_id == "":
@@ -716,16 +716,16 @@ def assign_user():
     else:
         team = Team.query.get(int(team_id))
         if not team:
-            flash("❌ 找不到指定隊伍")
+            flash("找不到指定隊伍")
             return redirect(url_for('main.list_users'))
 
         user.team_id = team.id
 
-        # ✅ 若是 visitor 則改為 member（首次加入隊伍）
+        # 若是 visitor 則改為 member（首次加入隊伍）
         if user.role == 'visitor':
             user.role = 'member'
 
-        flash(f"✅ 使用者 {user.username} 已分配至隊伍 {team.name}")
+        flash(f"使用者 {user.username} 已分配至隊伍 {team.name}")
 
     db.session.commit()
     return redirect(url_for('main.list_users'))
@@ -735,11 +735,11 @@ def assign_user():
 @login_required
 def delete_user(user_id):
     if current_user.role != 'admin':
-        return "❌ 無權限操作", 403
+        return "無權限操作", 403
 
     user = User.query.get_or_404(user_id)
     if user.role == 'admin':
-        flash("❌ 無法刪除管理員帳號")
+        flash("無法刪除管理員帳號")
     else:
         db.session.delete(user)
         db.session.commit()
@@ -750,11 +750,11 @@ def delete_user(user_id):
 @login_required
 def delete_team():
     if current_user.role != 'admin':
-        return "❌ 無權限操作", 403
+        return "無權限操作", 403
 
     team_id = request.form.get('team_id')
     if not team_id:
-        flash("❌ 請選擇要刪除的隊伍")
+        flash("請選擇要刪除的隊伍")
         return redirect(url_for('main.list_users'))
 
     team = Team.query.get_or_404(int(team_id))
@@ -774,7 +774,7 @@ def delete_team():
     db.session.delete(team)
     db.session.commit()
 
-    flash(f"✅ 隊伍 {team.name} 已刪除，所有成員角色已改為 visitor")
+    flash(f"隊伍 {team.name} 已刪除，所有成員角色已改為 visitor")
     return redirect(url_for('main.list_users'))
 
 @main.route('/edit_profile', methods=['GET', 'POST'])
@@ -1011,7 +1011,7 @@ def get_available_times(match_id):
 @login_required
 def reschedule_request():
     if current_user.role != 'captain' or not current_user.team:
-        flash("❌ 僅限隊長操作")
+        flash("僅限隊長操作")
         return redirect(url_for('main.dashboard'))
 
     # 獲取該隊伍的所有比賽
@@ -1161,7 +1161,7 @@ def reject_reschedule_request(request_id):
     reschedule_request.status = 'rejected'
     db.session.commit()
 
-    flash('❌ 已拒絕調賽申請')
+    flash('已拒絕調賽申請')
     return jsonify({'success': True})
 
 @main.route('/api/pending_reschedules')

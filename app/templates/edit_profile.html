@@ -1,137 +1,136 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
-  <head>
-    <meta charset="UTF-8" />
-    <title>編輯個人資料 | UniTeam</title>
-    <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64," />
-    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="" />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?display=swap&family=Inter:wght@400;500;700;900&family=Noto+Sans:wght@400;500;700;900" />
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-  </head>
-  
-  <body>
-    <div class="min-h-screen bg-gray-50 font-['Inter','Noto Sans',sans-serif]">
-      <div class="flex flex-col h-full min-h-screen">
-        <!-- Header -->
-        <header class="flex items-center justify-between border-b border-[#eaeef1] px-10 py-3 bg-white">
-          <div class="flex items-center gap-4">
-            <div class="size-4">
-              <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M44 11.2727C44 14.0109 39.8386 16.3957 33.69 17.6364C39.8386 18.877 44 21.2618 44 24C44 26.7382 39.8386 29.123 33.69 30.3636C39.8386 31.6043 44 33.9891 44 36.7273C44 40.7439 35.0457 44 24 44C12.9543 44 4 40.7439 4 36.7273C4 33.9891 8.16144 31.6043 14.31 30.3636C8.16144 29.123 4 26.7382 4 24C4 21.2618 8.16144 18.877 14.31 17.6364C8.16144 16.3957 4 14.0109 4 11.2727C4 7.25611 12.9543 4 24 4C35.0457 4 44 7.25611 44 11.2727Z" fill="currentColor"/>
-              </svg>
-            </div>
-            <h2 class="text-lg font-bold text-[#101518] tracking-[-0.015em]">中正排球聯盟</h2>
+
+<head>
+  <meta charset="UTF-8" />
+  <title>編輯個人資料 | 中正排球聯盟</title>
+  <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64," />
+  <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="" />
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?display=swap&family=Inter:wght@400;500;700;900&family=Noto+Sans:wght@400;500;700;900" />
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+</head>
+
+<body>
+  <div class="min-h-screen bg-gray-50 font-['Inter','Noto Sans',sans-serif]">
+    <div class="flex flex-col h-full min-h-screen">
+      <!-- Header -->
+      <header class="flex items-center justify-between border-b border-[#eaeef1] px-10 py-3 bg-white">
+        <div class="flex items-center gap-4">
+          <div class="size-4">
+            <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M44 11.2727C44 14.0109 39.8386 16.3957 33.69 17.6364C39.8386 18.877 44 21.2618 44 24C44 26.7382 39.8386 29.123 33.69 30.3636C39.8386 31.6043 44 33.9891 44 36.7273C44 40.7439 35.0457 44 24 44C12.9543 44 4 40.7439 4 36.7273C4 33.9891 8.16144 31.6043 14.31 30.3636C8.16144 29.123 4 26.7382 4 24C4 21.2618 8.16144 18.877 14.31 17.6364C8.16144 16.3957 4 14.0109 4 11.2727C4 7.25611 12.9543 4 24 4C35.0457 4 44 7.25611 44 11.2727Z"
+                fill="currentColor" />
+            </svg>
           </div>
-          <div class="flex flex-1 justify-end gap-8">
-            <nav class="flex items-center gap-9">
-                <a class="text-sm font-medium" href="{{ url_for('main.dashboard') }}">Dashboard</a>
-                <a class="text-sm font-medium" href="{{ url_for('main.edit_profile') }}">Profile</a> 
-            </nav>
-            <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10"
-              style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAFnRjxyvEoQjxCNuFg9Js_8dn3kkbHRiJLdS_D2R2B-9R_SmyTXb2In76C_tAtqmYGGupkMxns82JJGPGuGorEVOTB-ghW1MIgoiKRxKNcRLd6ikoyLiEddgdinLl4sUXdkfnyQNbScbHPuPVKPu3SKhA-RSfMVqpqWVZ4BJUb_eLc_pcckY3hY_J_7qhFdt4KxViHj3krjnvpzjeFxTqgvz-AWj0qJSj5YFjQuHQtc6qodJWmu0qMeLC4DOCAmjPIrjB9D_mZLVrJ");'>
-            </div>
+          <h2 class="text-lg font-bold text-[#101518] tracking-[-0.015em]">中正排球聯盟</h2>
+        </div>
+        <div class="flex flex-1 justify-end gap-8">
+          <nav class="flex items-center gap-9">
+            <a class="text-sm font-medium" href="{{ url_for('main.dashboard') }}">Dashboard</a>
+            <a class="text-sm font-medium" href="{{ url_for('main.edit_profile') }}">Profile</a>
+          </nav>
+          <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10"
+            style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAFnRjxyvEoQjxCNuFg9Js_8dn3kkbHRiJLdS_D2R2B-9R_SmyTXb2In76C_tAtqmYGGupkMxns82JJGPGuGorEVOTB-ghW1MIgoiKRxKNcRLd6ikoyLiEddgdinLl4sUXdkfnyQNbScbHPuPVKPu3SKhA-RSfMVqpqWVZ4BJUb_eLc_pcckY3hY_J_7qhFdt4KxViHj3krjnvpzjeFxTqgvz-AWj0qJSj5YFjQuHQtc6qodJWmu0qMeLC4DOCAmjPIrjB9D_mZLVrJ");'>
           </div>
-        </header>
+        </div>
+      </header>
 
-        <!-- Content -->
-        <main class="flex justify-center px-4 py-8 flex-1">
-          <form method="POST" class="w-full max-w-[480px] bg-white shadow-md rounded-xl p-6 space-y-6">
-            <h1 class="text-2xl font-bold text-[#101518] mb-4">編輯個人資料</h1>
-
-            <!-- Username (只讀) -->
-            <div>
-              <label class="block text-base font-medium text-[#101518] pb-2">帳號</label>
-              <input
-                class="form-input w-full rounded-xl border border-[#d4dde2] bg-gray-50 h-14 px-4 text-base"
-                value="{{ user.username }}"
-                readonly
-              />
+      <!-- Content -->
+      <main class="flex justify-center px-4 py-8 flex-1">
+        <div class="px-8 pt-6">
+          {% with messages = get_flashed_messages() %}
+          {% if messages %}
+          <div class="mb-4">
+            {% for msg in messages %}
+            <div class="bg-green-100 border border-green-300 text-green-900 px-4 py-2 rounded mb-2 shadow">
+              {{ msg }}
             </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+          {% endwith %}
+        </div>
 
-            <!-- Role (只讀) -->
-            <div>
-              <label class="block text-base font-medium text-[#101518] pb-2">角色</label>
-              <input
-                class="form-input w-full rounded-xl border border-[#d4dde2] bg-gray-50 h-14 px-4 text-base"
-                value="{{ user.role }}"
-                readonly
-              />
-            </div>
+        <form method="POST" class="w-full max-w-[480px] bg-white shadow-md rounded-xl p-6 space-y-6">
+          <h1 class="text-2xl font-bold text-[#101518] mb-4">編輯個人資料</h1>
 
-            <!-- Name -->
-            <div>
-              <label class="block text-base font-medium text-[#101518] pb-2">姓名</label>
-              <input
-                class="form-input w-full rounded-xl border border-[#d4dde2] bg-gray-50 h-14 px-4 text-base"
-                name="name"
-                value="{{ user.name or '' }}"
-                required
-              />
-            </div>
+          <!-- Username (只讀) -->
+          <div>
+            <label class="block text-base font-medium text-[#101518] pb-2">帳號</label>
+            <input class="form-input w-full rounded-xl border border-[#d4dde2] bg-gray-50 h-14 px-4 text-base"
+              value="{{ user.username }}" readonly />
+          </div>
 
-            <!-- Student ID -->
-            <div>
-              <label class="block text-base font-medium text-[#101518] pb-2">學號</label>
-              <input
-                class="form-input w-full rounded-xl border border-[#d4dde2] bg-gray-50 h-14 px-4 text-base"
-                name="student_id"
-                value="{{ user.student_id or '' }}"
-              />
-            </div>
+          <!-- Role (只讀) -->
+          <div>
+            <label class="block text-base font-medium text-[#101518] pb-2">角色</label>
+            <input class="form-input w-full rounded-xl border border-[#d4dde2] bg-gray-50 h-14 px-4 text-base"
+              value="{{ user.role }}" readonly />
+          </div>
 
-            <!-- Department -->
-            <div>
-              <label class="block text-base font-medium text-[#101518] pb-2">系所</label>
-              <select
-                class="form-select w-full rounded-xl border border-[#d4dde2] bg-gray-50 h-14 px-4 text-base"
-                name="department"
-                required
-              >
-                <option value="" disabled {% if not user.department %}selected{% endif %}>請選擇系所</option>
-                {% for dept in departments %}
-                  <option value="{{ dept }}" {% if user.department == dept %}selected{% endif %}>{{ dept }}</option>
-                {% endfor %}
-              </select>
-            </div>
+          <!-- Name -->
+          <div>
+            <label class="block text-base font-medium text-[#101518] pb-2">姓名</label>
+            <input class="form-input w-full rounded-xl border border-[#d4dde2] bg-gray-50 h-14 px-4 text-base"
+              name="name" value="{{ user.name or '' }}" required />
+          </div>
 
-            <!-- Grade -->
-            <div>
-              <label class="block text-base font-medium text-[#101518] pb-2">年級</label>
-              <select
-                class="form-select w-full rounded-xl border border-[#d4dde2] bg-gray-50 h-14 px-4 text-base"
-                name="grade"
-                required
-              >
-                <option value="" disabled {% if not user.grade %}selected{% endif %}>請選擇年級</option>
-                {% for grade in range(1, 7) %}
-                  <option value="{{ grade }}" {% if user.grade|string == grade|string %}selected{% endif %}>{{ grade }}</option>
-                {% endfor %}
-              </select>
-            </div>
+          <!-- Student ID -->
+          <div>
+            <label class="block text-base font-medium text-[#101518] pb-2">學號</label>
+            <input class="form-input w-full rounded-xl border border-[#d4dde2] bg-gray-50 h-14 px-4 text-base"
+              name="student_id" value="{{ user.student_id or '' }}" />
+          </div>
 
-            <!-- Gender -->
-            <div>
-              <label class="block text-base font-medium text-[#101518] pb-2">性別</label>
-              <select
-                class="form-select w-full rounded-xl border border-[#d4dde2] bg-gray-50 h-14 px-4 text-base"
-                name="gender"
-                required
-              >
-                <option value="" disabled {% if not user.gender %}selected{% endif %}>請選擇性別</option>
-                <option value="男" {% if user.gender == '男' %}selected{% endif %}>男</option>
-                <option value="女" {% if user.gender == '女' %}selected{% endif %}>女</option>
-              </select>
-            </div>
+          <!-- Department -->
+          <div>
+            <label class="block text-base font-medium text-[#101518] pb-2">系所</label>
+            <select class="form-select w-full rounded-xl border border-[#d4dde2] bg-gray-50 h-14 px-4 text-base"
+              name="department" required>
+              <option value="" disabled {% if not user.department %}selected{% endif %}>請選擇系所</option>
+              {% for dept in departments %}
+              <option value="{{ dept }}" {% if user.department==dept %}selected{% endif %}>{{ dept }}</option>
+              {% endfor %}
+            </select>
+          </div>
 
-            <!-- Submit -->
-            <div class="flex justify-end">
-              <button type="submit" class="min-w-[84px] h-10 px-4 rounded-full bg-[#b2d1e5] text-[#101518] text-sm font-bold">
-                更新個人資料
-              </button>
-            </div>
-          </form>
-        </main>
-      </div>
+          <!-- Grade -->
+          <div>
+            <label class="block text-base font-medium text-[#101518] pb-2">年級</label>
+            <select class="form-select w-full rounded-xl border border-[#d4dde2] bg-gray-50 h-14 px-4 text-base"
+              name="grade" required>
+              <option value="" disabled {% if not user.grade %}selected{% endif %}>請選擇年級</option>
+              {% for grade in range(1, 7) %}
+              <option value="{{ grade }}" {% if user.grade|string==grade|string %}selected{% endif %}>{{ grade }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Gender -->
+          <div>
+            <label class="block text-base font-medium text-[#101518] pb-2">性別</label>
+            <select class="form-select w-full rounded-xl border border-[#d4dde2] bg-gray-50 h-14 px-4 text-base"
+              name="gender" required>
+              <option value="" disabled {% if not user.gender %}selected{% endif %}>請選擇性別</option>
+              <option value="男" {% if user.gender=='男' %}selected{% endif %}>男</option>
+              <option value="女" {% if user.gender=='女' %}selected{% endif %}>女</option>
+            </select>
+          </div>
+
+          <!-- Submit -->
+          <div class="flex justify-end">
+            <button type="submit"
+              class="min-w-[84px] h-10 px-4 rounded-full bg-[#b2d1e5] text-[#101518] text-sm font-bold">
+              更新個人資料
+            </button>
+          </div>
+        </form>
+      </main>
     </div>
-  </body>
+  </div>
+</body>
+
 </html>

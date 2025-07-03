@@ -40,49 +40,58 @@
         <!-- Sidebar -->
         <aside class="w-80 h-[calc(100vh-64px)] bg-slate-50 border-r border-[#e5e7eb]
            sticky top-16 flex flex-col overflow-auto p-4">
-                    <div class="flex flex-col gap-4 pb-2">
-                        <div>
-                            <h1 class="text-[#0e141b] text-base font-medium">{{ current_user.name }}</h1>
-                            {% if current_user.team.name %}
-                                <p class="text-[#4e7097] text-sm">{{ current_user.team.name }} - {{ current_user.role }}</p>
-                            {% else %}
-                                <p class="text-[#4e7097] text-sm">{{ current_user.role }}</p>
-                            {% endif %}
-                        </div>
-                        <nav class="flex flex-col gap-2">
-                            <a href="{{ url_for('main.dashboard') }}">
-                                <button
-                                    class="text-left flex items-center gap-2 px-3 py-2 rounded-full hover:bg-[#eaeef1]">
-                                    <span class="text-sm font-medium text-[#101518]">Dashboard</span>
-                                </button>
-                            </a>
-                            <a href="{{ url_for('main.list_teams') }}">
-                                <button
-                                    class="text-left flex items-center gap-2 px-3 py-2 rounded-full hover:bg-[#eaeef1]">
-                                    <span class="text-sm font-medium text-[#101518]">Teams</span>
-                                </button>
-                            </a>
-                            <a href="{{ url_for('main.matches_page') }}">
-                                <button
-                                    class="text-left flex items-center gap-2 px-3 py-2 rounded-full hover:bg-[#eaeef1]">
-                                    <span class="text-sm font-medium text-[#101518]">Matches</span>
-                                </button>
-                            </a>
-                            <button class="text-left flex items-center gap-2 px-3 py-2 rounded-full hover:bg-[#eaeef1]">
-                                <span class="text-sm font-medium text-[#101518]">Settings</span>
-                            </button>
-                        </nav>
-                    </div>
-                    <div class="mt-auto">
-                        <a href="{{ url_for('main.logout') }}"
-                            class="w-full px-3 py-2 bg-blue-100 rounded-lg text-blue-900 hover:bg-blue-200">
-                            登出
-                        </a>
-                    </div>
-                </aside>
+          <div class="flex flex-col gap-4 pb-2">
+            <div>
+              <h1 class="text-[#0e141b] text-base font-medium">{{ current_user.name }}</h1>
+              {% if current_user.team.name %}
+              <p class="text-[#4e7097] text-sm">{{ current_user.team.name }} - {{ current_user.role }}</p>
+              {% else %}
+              <p class="text-[#4e7097] text-sm">{{ current_user.role }}</p>
+              {% endif %}
+            </div>
+            <nav class="flex flex-col gap-2">
+              <a href="{{ url_for('main.dashboard') }}">
+                <button class="text-left flex items-center gap-2 px-3 py-2 rounded-full hover:bg-[#eaeef1]">
+                  <span class="text-sm font-medium text-[#101518]">Dashboard</span>
+                </button>
+              </a>
+              <a href="{{ url_for('main.list_teams') }}">
+                <button class="text-left flex items-center gap-2 px-3 py-2 rounded-full hover:bg-[#eaeef1]">
+                  <span class="text-sm font-medium text-[#101518]">Teams</span>
+                </button>
+              </a>
+              <a href="{{ url_for('main.matches_page') }}">
+                <button class="text-left flex items-center gap-2 px-3 py-2 rounded-full hover:bg-[#eaeef1]">
+                  <span class="text-sm font-medium text-[#101518]">Matches</span>
+                </button>
+              </a>
+              <button class="text-left flex items-center gap-2 px-3 py-2 rounded-full hover:bg-[#eaeef1]">
+                <span class="text-sm font-medium text-[#101518]">Settings</span>
+              </button>
+            </nav>
+          </div>
+          <div class="mt-auto">
+            <a href="{{ url_for('main.logout') }}"
+              class="w-full px-3 py-2 bg-blue-100 rounded-lg text-blue-900 hover:bg-blue-200">
+              登出
+            </a>
+          </div>
+        </aside>
 
         <!-- Main Content -->
         <main class="flex-1 flex flex-col h-full min-h-screen bg-white overflow-auto">
+          <div class="container mx-auto mt-4">
+            {% with messages = get_flashed_messages() %}
+            {% if messages %}
+            <div class="mb-4">
+              {% for msg in messages %}
+              <div class="bg-blue-100 border border-blue-300 text-blue-800 px-4 py-2 rounded mb-2">{{ msg }}</div>
+              {% endfor %}
+            </div>
+            {% endif %}
+            {% endwith %}
+          </div>
+
           <!-- Page Header -->
           <div class="px-8 py-6 border-b border-[#e5e7eb]">
             <p class="text-[#0e141b] text-[32px] font-bold leading-tight">Teams</p>
@@ -218,7 +227,7 @@
               });
             }
           </script>
-          </main>
+        </main>
       </div>
 </body>
 

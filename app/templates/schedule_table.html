@@ -46,9 +46,9 @@
                         <div>
                             <h1 class="text-[#0e141b] text-base font-medium">{{ current_user.name }}</h1>
                             {% if current_user.team.name %}
-                                <p class="text-[#4e7097] text-sm">{{ current_user.team.name }} - {{ current_user.role }}</p>
+                            <p class="text-[#4e7097] text-sm">{{ current_user.team.name }} - {{ current_user.role }}</p>
                             {% else %}
-                                <p class="text-[#4e7097] text-sm">{{ current_user.role }}</p>
+                            <p class="text-[#4e7097] text-sm">{{ current_user.role }}</p>
                             {% endif %}
                         </div>
                         <nav class="flex flex-col gap-2">
@@ -85,6 +85,20 @@
 
                 <!-- Main Content -->
                 <main class="flex-1 flex flex-col h-full min-h-screen bg-white overflow-auto">
+                    <div class="px-8 pt-6">
+                        {% with messages = get_flashed_messages() %}
+                        {% if messages %}
+                        <div class="mb-4">
+                            {% for msg in messages %}
+                            <div
+                                class="bg-green-100 border border-green-300 text-green-900 px-4 py-2 rounded mb-2 shadow">
+                                {{ msg }}
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        {% endwith %}
+                    </div>
                     <!-- Page Header -->
                     <div class="px-8 py-6 border-b border-[#e5e7eb]">
                         <p class="text-[#0e141b] text-[32px] font-bold leading-tight">Matches</p>
@@ -127,9 +141,9 @@
 
 
                     <!-- Schedule Table -->
-                    <div class="px-4 py-3 @container">
-                        <div class="overflow-hidden rounded-xl border border-[#d4dbe2] bg-gray-50">
-                            <table class="min-w-[800px] divide-y divide-[#d4dbe2] bg-white">
+                    <div class="mb-8 @container px-4 py-3">
+                        <div class="overflow-x-auto bg-gray-50 border border-[#d4dde2] rounded-xl">
+                            <table class="min-w-full bg-white" id="teamsTable">
                                 <thead class="bg-gray-50">
                                     <tr>
                                         <th

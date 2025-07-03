@@ -117,5 +117,5 @@ for i in range(len(departments)):
     db.session.add(member)
     db.session.commit()
 
-print(f"✅ 已建立 {len(departments)} 男排 + {len(departments)} 女排 隊伍與隊長(帳號 m_captainA~R / f_captainA~R, 密碼 0000), 每隊也新增一位隊員(帳號 m_memberA~R / f_memberA~R, 密碼 0000)")
-print("✅ 已建立管理員帳號: admin / admin")
+print(f"已建立 {len(departments)} 男排 + {len(departments)} 女排 隊伍與隊長(帳號 m_captainA~R / f_captainA~R, 密碼 0000), 每隊也新增一位隊員(帳號 m_memberA~R / f_memberA~R, 密碼 0000)")
+print("已建立管理員帳號: admin / admin")

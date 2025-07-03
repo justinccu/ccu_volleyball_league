@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>University Volleyball League Admin</title>
+    <title>User | 中正排球聯盟</title>
     <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin />
     <link rel="stylesheet" as="style" onload="this.rel='stylesheet'"
         href="https://fonts.googleapis.com/css2?display=swap&family=Inter:wght@400;500;700;900&family=Noto+Sans:wght@400;500;700;900" />
@@ -46,7 +46,8 @@
 
 <body class="bg-gray-50 min-h-screen flex flex-col">
     <!-- Header -->
-    <header class="fixed top-0 left-0 w-full flex items-center justify-between border-b border-[#eaeef1] px-10 py-3 bg-white z-40 h-16">
+    <header
+        class="fixed top-0 left-0 w-full flex items-center justify-between border-b border-[#eaeef1] px-10 py-3 bg-white z-40 h-16">
         <div class="flex items-center gap-4 text-[#101518]">
             <svg viewBox="0 0 48 48" class="w-5 h-5" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M4 4H17.3334V17.3334H30.6666V30.6666H44V44H4V4Z" fill="currentColor"></path>
@@ -65,7 +66,8 @@
     <!-- Main Layout -->
     <div class="flex flex-1 h-screen overflow-hidden">
         <!-- Sidebar -->
-        <aside class="fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 border-r border-[#eaeef1] p-4 bg-white flex flex-col z-30">
+        <aside
+            class="fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 border-r border-[#eaeef1] p-4 bg-white flex flex-col z-30">
             <div class="flex flex-col gap-2">
                 <button onclick="showForm('form-add-user')" data-form="form-add-user"
                     class="text-left flex items-center gap-2 px-3 py-2 rounded-full hover:bg-[#eaeef1]">
@@ -98,6 +100,18 @@
 
         <!-- Main Content -->
         <main class="flex-1 p-10 bg-gray-50 ml-64 pt-16 overflow-y-auto">
+            <div class="container mx-auto mt-4">
+                {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                <div class="mb-4">
+                    {% for msg in messages %}
+                    <div class="bg-blue-100 border border-blue-300 text-blue-800 px-4 py-2 rounded mb-2">{{ msg }}</div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                {% endwith %}
+            </div>
+
             <!-- 新增使用者表單 -->
             <div id="form-add-user" class="form-section hidden">
                 <div class="layout-content-container flex flex-col w-full max-w-none px-10">
