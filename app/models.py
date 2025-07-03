@@ -3,7 +3,6 @@ from flask_login import UserMixin
 from . import login_manager
 from sqlalchemy import UniqueConstraint
 from datetime import datetime
-
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
@@ -19,7 +18,7 @@ class User(db.Model, UserMixin):
     # 角色
     role = db.Column(db.String(10), nullable=False)
     # 隊伍
-    team_id = db.Column(db.Integer, db.ForeignKey('team.id', name='fk_user_team_id'), nullable=True)
+    team_id = db.Column(db.Integer, db.ForeignKey('team.id'), nullable=True)
     # 系所
     department = db.Column(db.String(100), nullable=True)
     # 年級
@@ -34,15 +33,15 @@ class Team(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False)
-    captain_id = db.Column(db.Integer, db.ForeignKey('user.id', name='fk_team_captain_id'), nullable=True)
+    captain_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     team_type = db.Column(db.String(10), nullable=False)
     team_cycle = db.Column(db.String(10), nullable=True)
     __table_args__ = (
         UniqueConstraint('name', 'team_type', name='uq_team_name_type'),
     )
-    # 注意 backref 名稱不要衝突
     captain = db.relationship('User', foreign_keys=[captain_id], backref='captain_of_team')
-    members = db.relationship('User', backref='member_of_team', lazy=True, foreign_keys='User.team_id')
+    members = db.relationship('User', backref='team', lazy=True, foreign_keys='User.team_id')
+
 
 class Match(db.Model):
     __tablename__ = 'match'
@@ -50,9 +49,9 @@ class Match(db.Model):
     id = db.Column(db.Integer, primary_key=True)
 
     # 比賽雙方與裁判（皆為 Team）
-    team1_id = db.Column(db.Integer, db.ForeignKey('team.id', name='fk_match_team1_id'), nullable=False)
-    team2_id = db.Column(db.Integer, db.ForeignKey('team.id', name='fk_match_team2_id'), nullable=False)
-    referee_id = db.Column(db.Integer, db.ForeignKey('team.id', name='fk_match_referee_id'), nullable=False)
+    team1_id = db.Column(db.Integer, db.ForeignKey('team.id'), nullable=False)
+    team2_id = db.Column(db.Integer, db.ForeignKey('team.id'), nullable=False)
+    referee_id = db.Column(db.Integer, db.ForeignKey('team.id'), nullable=False)
     
     # 比賽類型（男排/女排）
     team_type = db.Column(db.String(10), nullable=False)
@@ -74,21 +73,21 @@ class Match(db.Model):
     team2_lamp_fee = db.Column(db.Integer, nullable=True)
 
     # 勝負結果
-    winner_id = db.Column(db.Integer, db.ForeignKey('team.id', name='fk_match_winner_id'), nullable=True)
-    loser_id = db.Column(db.Integer, db.ForeignKey('team.id', name='fk_match_loser_id'), nullable=True)
+    winner_id = db.Column(db.Integer, db.ForeignKey('team.id'), nullable=True)
+    loser_id = db.Column(db.Integer, db.ForeignKey('team.id'), nullable=True)
 
     # 關聯設計
-    team1 = db.relationship('Team', foreign_keys=[team1_id], backref='matches_as_team1')
-    team2 = db.relationship('Team', foreign_keys=[team2_id], backref='matches_as_team2')
-    referee = db.relationship('Team', foreign_keys=[referee_id], backref='matches_as_referee')
-    winner = db.relationship('Team', foreign_keys=[winner_id], backref='matches_as_winner')
-    loser = db.relationship('Team', foreign_keys=[loser_id], backref='matches_as_loser')
+    team1 = db.relationship('Team', foreign_keys=[team1_id])
+    team2 = db.relationship('Team', foreign_keys=[team2_id])
+    referee = db.relationship('Team', foreign_keys=[referee_id])
+    winner = db.relationship('Team', foreign_keys=[winner_id])
+    loser = db.relationship('Team', foreign_keys=[loser_id])
     
     # Match 中新增以下欄位
     status = db.Column(db.String(20), default='pending')  # pending, waiting_confirm, confirmed
     team1_confirmed = db.Column(db.Boolean, default=False)
     team2_confirmed = db.Column(db.Boolean, default=False)
-    result_submitted_by = db.Column(db.Integer, db.ForeignKey('user.id', name='fk_match_result_submitted_by'))  # 登錄人（裁判隊長）
+    result_submitted_by = db.Column(db.Integer, db.ForeignKey('user.id'))  # 登錄人（裁判隊長）
 
     __table_args__ = (
         db.UniqueConstraint('team1_id', 'team2_id', name='unique_match_teams'),
@@ -98,17 +97,17 @@ class JoinRequest(db.Model):
     __tablename__ = 'join_request'
     id = db.Column(db.Integer, primary_key=True)
 
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id', name='fk_joinrequest_user_id'), nullable=False)
-    team_id = db.Column(db.Integer, db.ForeignKey('team.id', name='fk_joinrequest_team_id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    team_id = db.Column(db.Integer, db.ForeignKey('team.id'), nullable=False)
     status = db.Column(db.String(20), default='pending')  # pending / approved / rejected
 
-    user = db.relationship('User', backref='join_requests')
+    user = db.relationship('User', backref='join_request')
     team = db.relationship('Team', backref='join_requests')
 
 class RescheduleRequest(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    match_id = db.Column(db.Integer, db.ForeignKey('match.id', name='fk_reschedulerequest_match_id'), nullable=False)
-    requester_team_id = db.Column(db.Integer, db.ForeignKey('team.id', name='fk_reschedulerequest_requester_team_id'), nullable=False)
+    match_id = db.Column(db.Integer, db.ForeignKey('match.id'), nullable=False)
+    requester_team_id = db.Column(db.Integer, db.ForeignKey('team.id'), nullable=False)
     requested_time = db.Column(db.DateTime, nullable=True)
     status = db.Column(db.String(20), default='pending')  # pending, approved, rejected
     requester_team_confirmed = db.Column(db.Boolean, default=True)  # 請求方隊長確認
@@ -119,15 +118,14 @@ class RescheduleRequest(db.Model):
 
     # 關聯
     match = db.relationship('Match', backref='reschedule_requests')
-    requester_team = db.relationship('Team', foreign_keys=[requester_team_id], backref='reschedule_requests_as_requester')
+    requester_team = db.relationship('Team', foreign_keys=[requester_team_id], backref='reschedule_requests')
 
 class AvailableTime(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     match_time = db.Column(db.DateTime, nullable=False)
     team_type = db.Column(db.String(10), nullable=False)  # 男排/女排
     is_used = db.Column(db.Boolean, default=False)  # 是否已被使用
-    match_id = db.Column(db.Integer, db.ForeignKey('match.id', name='fk_availabletime_match_id'), nullable=True)  # 如果被使用，關聯到對應的比賽
-    match = db.relationship('Match', backref='available_times')
+    match_id = db.Column(db.Integer, db.ForeignKey('match.id'), nullable=True)  # 如果被使用，關聯到對應的比賽
 
     def __repr__(self):
         return f'<AvailableTime {self.match_time}>'
