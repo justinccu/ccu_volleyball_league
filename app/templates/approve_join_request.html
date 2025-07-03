@@ -114,18 +114,6 @@
                                 <p class="text-[#0e161b] text-[32px] font-bold leading-tight">入隊申請審核</p>
                             </div>
                         </div>
-                        {% with messages = get_flashed_messages(with_categories=true) %}
-                        {% if messages %}
-                        <div class="mb-4">
-                            {% for category, message in messages %}
-                            <div
-                                class="flash-message {% if category == 'success' %}text-green{% else %}text-red{% endif %}">
-                                {{ message }}
-                            </div>
-                            {% endfor %}
-                        </div>
-                        {% endif %}
-                        {% endwith %}
 
                         {% if requests %}
                         <div class="overflow-x-auto">

@@ -834,6 +834,7 @@ def get_matches():
             'home_team': match.team1.name,
             'away_team': match.team2.name,
             'status': status,
+            'lamp_fee': f"{match.team1_lamp_fee} : {match.team2_lamp_fee}",
             'score': score,
             'referee': match.referee.name if match.referee else '待定',
             'team_type': '男排' if match.team_type == '男排' else '女排'

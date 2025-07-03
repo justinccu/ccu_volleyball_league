@@ -133,6 +133,7 @@
                                         <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">比賽時間</th>
                                         <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">比分</th>
                                         <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">勝負</th>
+                                        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">燈錢</th>
                                         <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">確認狀態</th>
                                     </tr>
                                 </thead>
@@ -167,10 +168,17 @@
                                             <span class="text-gray-500">-</span>
                                             {% endif %}
                                         </td>
+                                        <!-- light money -->
+                                        <td class="px-4 py-3 text-sm">
+                                            {{match.team1.name}}:{{ match.team1_lamp_fee or '-' }}<br />
+                                            {{match.team2.name}}:{{ match.team2_lamp_fee or '-' }}
+                                        </td>
                                         <!-- confirmation -->
                                         <td class="px-4 py-3 text-sm space-x-2">
                                             {% if match.status == 'waiting_confirm' %}
-                                            {% if team.id == match.team1_id and not match.team1_confirmed %}
+                                            {% if (team.id == match.team1_id and not match.team1_confirmed) or
+                                            (team.id == match.team2_id and not match.team2_confirmed) %}
+                                            {% if current_user.id == team.captain_id %}
                                             <form method="POST"
                                                 action="{{ url_for('main.confirm_match', match_id=match.id) }}"
                                                 class="inline">
@@ -185,21 +193,9 @@
                                                     class="px-2 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600">❌
                                                     不確認</button>
                                             </form>
-                                            {% elif team.id == match.team2_id and not match.team2_confirmed %}
-                                            <form method="POST"
-                                                action="{{ url_for('main.confirm_match', match_id=match.id) }}"
-                                                class="inline">
-                                                <button type="submit"
-                                                    class="px-2 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600">✅
-                                                    確認</button>
-                                            </form>
-                                            <form method="POST"
-                                                action="{{ url_for('main.reject_match', match_id=match.id) }}"
-                                                class="inline">
-                                                <button type="submit"
-                                                    class="px-2 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600">❌
-                                                    不確認</button>
-                                            </form>
+                                            {% else %}
+                                            <span class="text-gray-500">僅隊長可操作</span>
+                                            {% endif %}
                                             {% else %}
                                             <span class="text-green-600 font-medium">✅ 已確認</span>
                                             {% endif %}
@@ -211,6 +207,7 @@
                                             <span class="text-gray-500">-</span>
                                             {% endif %}
                                         </td>
+
                                     </tr>
                                     {% endfor %}
                                 </tbody>
